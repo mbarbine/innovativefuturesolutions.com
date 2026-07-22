@@ -148,7 +148,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
   text-transform: uppercase;
 }
 
-.eyebrow { position: absolute; top: 34px; left: clamp(30px, 8vw, 132px); }
+.eyebrow { position: absolute; top: 18px; left: clamp(30px, 8vw, 132px); }
 .slide-number { margin-bottom: clamp(18px, 3vh, 34px); }
 
 h1, h2 { margin: 0; letter-spacing: -0.055em; line-height: 0.95; }
