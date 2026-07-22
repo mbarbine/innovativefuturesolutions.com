@@ -17,6 +17,7 @@ let timerStartedAt = null;
 let timerElapsedMs = 0;
 let timerInterval = null;
 let pipelineRunId = 0;
+let burstRunId = 0;
 
 const chapterButtons = slides.map((slide, index) => {
   const button = document.createElement("button");
@@ -129,7 +130,7 @@ function toggleTimer() {
     timerStartedAt = Date.now();
     timerInterval = window.setInterval(renderTimer, 250);
     setTimerButtonLabel("Pause timer");
-    setPresenterMessage("Presenter timer is running. Target: 12–15 minutes for the core story plus selected architecture notes.");
+    setPresenterMessage("Presenter timer is running. Follow the evidence path and leave time for questions.");
   } else {
     timerElapsedMs += Date.now() - timerStartedAt;
     timerStartedAt = null;
@@ -167,7 +168,7 @@ function renderPreflightCheck(check, index) {
 async function runPreflight() {
   openPresenter();
   setText("[data-presenter-readiness]", "Checking…");
-  setText('[data-live="preflight-summary"]', "Running seven live checks…");
+  setText('[data-live="preflight-summary"]', "Running eight live checks…");
   preflightGrid.replaceChildren();
   const loading = document.createElement("p");
   loading.textContent = "Calling the Worker for live edge context and the deployment control snapshot…";
@@ -232,6 +233,9 @@ async function loadControls() {
     setHud("bots", controls.bots.mode === "bot-fight-mode" ? "on" : controls.bots.mode, controls.bots.mode !== "unknown");
     const operationCount = Array.isArray(controls.apiGateway.operations) ? controls.apiGateway.operations.length : 0;
     setHud("api", operationCount ? `${operationCount} routes` : controls.apiGateway.status.replaceAll("-", " "), controls.apiGateway.status !== "unknown");
+    if (controls.rateLimit) {
+      setText("[data-burst-summary]", controls.rateLimit.status === "active" ? controls.rateLimit.policy : "Control snapshot unavailable");
+    }
   } catch {
     setText('[data-live="waf-status"]', "unknown");
     setText('[data-live="bot-mode"]', "unknown");
@@ -400,6 +404,43 @@ async function runApiExplorer(path) {
   }
 }
 
+async function runControlledBurst() {
+  const runId = ++burstRunId;
+  const button = document.querySelector('[data-action="run-burst"]');
+  const output = document.querySelector("[data-burst-output]");
+  button.disabled = true;
+  output.textContent = "Sending a bounded burst to one isolated demo endpoint…";
+  let allowed = 0;
+  let blocked = 0;
+  let lastStatus = 0;
+
+  const send = async () => {
+    const response = await fetch(`/api/demo/burst-control?run=${runId}&n=${allowed + blocked + 1}`, { cache: "no-store" });
+    lastStatus = response.status;
+    await response.body?.cancel();
+    if (response.status === 429 || response.status === 403) blocked += 1;
+    else allowed += 1;
+    output.textContent = `${allowed} reached Worker · ${blocked} stopped at edge · last status ${response.status}`;
+    return blocked > 0;
+  };
+
+  try {
+    for (let index = 0; index < 8 && !(await send()); index += 1) await wait(90);
+    if (!blocked) {
+      output.textContent = `${allowed} reached Worker · waiting for the distributed counter to update…`;
+      await wait(1800);
+      for (let index = 0; index < 8 && !(await send()); index += 1) await wait(140);
+    }
+    output.textContent = blocked
+      ? `${allowed} reached Worker · ${blocked} stopped at edge · ${lastStatus} proves enforcement before code`
+      : `${allowed} reached Worker · counter propagation is delayed; retry after the 10-second window`;
+  } catch (error) {
+    output.textContent = error instanceof Error ? error.message : "The burst-control proof could not complete.";
+  } finally {
+    button.disabled = false;
+  }
+}
+
 const storageScenarios = {
   flags: { service: "kv", message: "Workers KV — globally read-heavy configuration tolerates eventual consistency." },
   room: { service: "durable", message: "Durable Objects — one authoritative instance coordinates each room with strongly consistent state." },
@@ -480,6 +521,7 @@ async function toggleFullscreen() {
 
 function resetDemo() {
   pipelineRunId += 1;
+  burstRunId += 1;
   clearEvidence();
   sessionStorage.removeItem("waf-evidence");
   timerStartedAt = null;
@@ -490,7 +532,7 @@ function resetDemo() {
   renderTimer();
   preflightGrid.replaceChildren();
   const message = document.createElement("p");
-  message.textContent = "Run preflight to verify the Worker, custom domain, TLS, WAF, bots, Turnstile, and API inventory from live evidence.";
+  message.textContent = "Run preflight to verify the Worker, custom domain, TLS, WAF, bots, Turnstile, API inventory, and rate limit from live evidence.";
   preflightGrid.append(message);
   setText("[data-presenter-readiness]", "Not checked");
   setText('[data-live="preflight-summary"]', "Live evidence is ready to inspect");
@@ -503,6 +545,7 @@ function resetDemo() {
   document.querySelector("[data-pipeline-output]").innerHTML = "<strong>Bindings are the connective tissue:</strong> the Worker receives platform capabilities through its environment instead of exposing service credentials to browser code.";
   document.querySelector("[data-api-output]").textContent = "Select a GET operation to inspect its public-safe response.";
   document.querySelector("[data-api-status]").textContent = "READY";
+  document.querySelector("[data-burst-output]").textContent = "The first responses should reach the Worker; the edge then returns 429.";
   if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
   showSlide(0);
   setPresenterMessage("Demo state reset. Cloudflare configuration and dashboard Security Events were not modified.");
@@ -531,6 +574,7 @@ document.addEventListener("click", (event) => {
   }
   if (action === "clear-evidence") clearEvidence();
   if (action === "run-pipeline") runPipeline();
+  if (action === "run-burst") runControlledBurst();
   const apiPath = event.target.closest("[data-api-path]")?.dataset.apiPath;
   if (apiPath) runApiExplorer(apiPath);
   const storageScenario = event.target.closest("[data-storage-scenario]")?.dataset.storageScenario;

@@ -351,15 +351,15 @@ def add_cover(doc: Document):
 
     subtitle = doc.add_paragraph()
     subtitle.paragraph_format.space_after = Pt(24)
-    set_run_font(subtitle.add_run("Speaker Notes — Candidate-Neutral Interview Edition"), size=13.5, color=MUTED)
+    set_run_font(subtitle.add_run("Solutions Engineer Roleplay Runbook — Private Presenter Edition"), size=13.5, color=MUTED)
 
     table = doc.add_table(rows=1, cols=4)
     set_table_geometry(table, [2340, 2340, 2340, 2340], indent=120)
     values = [
-        ("12–15 MIN", "Core story"),
-        ("14 SLIDES", "Guided sequence"),
-        ("7 CHECKS", "Live preflight"),
-        ("200 → 403", "Proof moment"),
+        ("30 MIN", "Customer call"),
+        ("5 · 5 · 17 · 3", "Stage clock"),
+        ("8 CHECKS", "Live preflight"),
+        ("200→403→429", "Proof chain"),
     ]
     for cell, (metric, label) in zip(table.rows[0].cells, values):
         cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
@@ -473,7 +473,7 @@ def build():
     number_abstract = create_abstract_numbering(doc, bullet=False)
 
     doc.core_properties.title = "Application Security at the Edge — Speaker Notes"
-    doc.core_properties.subject = "Candidate-neutral Cloudflare application security interview runbook"
+    doc.core_properties.subject = "Cloudflare Solutions Engineer application security roleplay runbook"
     doc.core_properties.author = "Innovative Future Solutions"
     doc.core_properties.keywords = "Cloudflare, application security, speaker notes, interview"
 

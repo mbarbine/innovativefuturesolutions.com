@@ -262,7 +262,11 @@ Deployed globally</code></pre>
             <p class="lede compact">API Shield inventories routes at the edge. The OpenAPI document makes intended operations explicit; Endpoint Management records the real surface.</p>
             <div class="api-status"><span></span><b data-live="api-status">Checking endpoint management…</b></div>
             <a class="text-link" href="/openapi.yaml">Open the machine-readable schema →</a>
-            <p class="architecture-handoff">This demo remains stateless. If the API gained durable data, the consistency requirement—not product popularity—would choose the storage primitive.</p>
+            <div class="burst-control">
+              <div><small>LIVE ABUSE CONTROL</small><strong data-burst-summary>5 requests / 10 seconds</strong></div>
+              <button class="secondary compact-control" type="button" data-action="run-burst">Run controlled burst</button>
+              <output data-burst-output aria-live="polite">The first responses should reach the Worker; the edge then returns 429.</output>
+            </div>
           </div>
           <div class="api-explorer">
             <div class="endpoint-list" aria-label="Interactive API operation inventory">
@@ -272,6 +276,7 @@ Deployed globally</code></pre>
               <button type="button" data-api-path="/api/demo/preflight"><b class="get">GET</b><code>/api/demo/preflight</code><span>run →</span></button>
               <button type="button" data-api-path="/api/demo/request-inspection"><b class="get">GET</b><code>/api/demo/request-inspection</code><span>run →</span></button>
               <button type="button" data-api-path="/api/demo/profile"><b class="get">GET</b><code>/api/demo/profile</code><span>run →</span></button>
+              <button type="button" data-api-path="/api/demo/burst-control"><b class="get">GET</b><code>/api/demo/burst-control</code><span>rate limit</span></button>
               <div><b class="post">POST</b><code>/api/demo/login</code><span>Turnstile</span></div>
               <div><b class="get">GET</b><code>/api/docs</code><span>catalogued</span></div>
             </div>

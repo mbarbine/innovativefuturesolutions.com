@@ -67,12 +67,25 @@ describe("application security worker", () => {
     };
 
     expect(body.ok).toBe(true);
-    expect(body.data.apiGateway.operations).toHaveLength(7);
+    expect(body.data.apiGateway.operations).toHaveLength(8);
     expect(body.data.apiGateway.operations).toContainEqual({
       method: "POST",
       path: "/api/demo/login",
       control: "Turnstile verified",
     });
+  });
+
+  it("exposes an isolated, lightweight rate-limit target", async () => {
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/demo/burst-control"),
+      env({ RATE_LIMIT_STATUS: "active" }),
+    );
+    const body = await response.json() as { ok: boolean; data: { allowed: boolean; meaning: string } };
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.data.allowed).toBe(true);
+    expect(body.data.meaning).toContain("429 response proves");
   });
 
   it("returns a public-safe preflight matrix backed by configuration state", async () => {
@@ -93,7 +106,7 @@ describe("application security worker", () => {
 
     expect(response.status).toBe(200);
     expect(body.ok).toBe(true);
-    expect(body.data.checks).toHaveLength(7);
+    expect(body.data.checks).toHaveLength(8);
     expect(body.data.checks).toContainEqual({
       id: "waf",
       label: "WAF custom rule",

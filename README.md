@@ -1,6 +1,6 @@
 # Innovative Future Solutions — Application Security at the Edge
 
-An interactive slide deck and live application-security demonstration deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com). Version 1.2.0 adds a presenter command center, live readiness preflight, an executable API inventory, architecture decision labs, and a separate interview speaker guide.
+An interactive slide deck and live application-security demonstration deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com). Version 1.3.0 adds a real, path-scoped Cloudflare rate-limiting proof, an eight-control presenter preflight, a 30-minute private Solutions Engineer roleplay runbook, and a measurable POC close.
 
 The guided walkthrough covers:
 

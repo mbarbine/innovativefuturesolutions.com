@@ -7,11 +7,13 @@ export interface Env {
   WAF_RULE_ID?: string;
   BOT_POLICY_MODE?: string;
   API_DISCOVERY_STATUS?: string;
+  RATE_LIMIT_STATUS?: string;
+  RATE_LIMIT_RULE_ID?: string;
 }
 
 type JsonRecord = Record<string, unknown>;
 
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.3.0";
 
 const apiOperations = [
   { method: "GET", path: "/api/health", control: "public health" },
@@ -19,6 +21,7 @@ const apiOperations = [
   { method: "GET", path: "/api/demo/preflight", control: "live readiness evidence" },
   { method: "GET", path: "/api/demo/request-inspection", control: "redacted edge context" },
   { method: "GET", path: "/api/demo/profile", control: "public synthetic data" },
+  { method: "GET", path: "/api/demo/burst-control", control: "edge rate limit target" },
   { method: "POST", path: "/api/demo/login", control: "Turnstile verified" },
   { method: "GET", path: "/api/docs", control: "public API documentation" },
 ] as const;
@@ -119,6 +122,12 @@ function securityControls(env: Env): JsonRecord {
       note: "API Shield Endpoint Management is available on all plans. Worker-backed endpoint metrics may be unavailable.",
       operations: apiOperations,
     },
+    rateLimit: {
+      status: env.RATE_LIMIT_STATUS ?? "unknown",
+      ruleId: env.RATE_LIMIT_RULE_ID ? env.RATE_LIMIT_RULE_ID.slice(0, 8) + "…" : null,
+      demoTarget: "/api/demo/burst-control",
+      policy: "5 requests per 10 seconds; block for 10 seconds",
+    },
   };
 }
 
@@ -196,6 +205,12 @@ function preflight(env: Env, request: Request): JsonRecord {
       status: env.API_DISCOVERY_STATUS === "endpoint-management-configured" ? "pass" : "warn",
       evidence: `${apiOperations.length} declared operations`,
     },
+    {
+      id: "rate-limit",
+      label: "API burst control",
+      status: env.RATE_LIMIT_STATUS === "active" ? "pass" : "warn",
+      evidence: env.RATE_LIMIT_STATUS === "active" ? "5 requests / 10 seconds" : env.RATE_LIMIT_STATUS ?? "unknown",
+    },
   ];
 
   return {
@@ -207,6 +222,7 @@ function preflight(env: Env, request: Request): JsonRecord {
       "Bot Fight Mode is the configured Free-plan control; Enterprise bot scores are not claimed.",
       "Worker-backed API Shield endpoint metrics may not populate even when endpoints are catalogued.",
       "Security Event details remain in the authenticated Cloudflare dashboard.",
+      "Rate counters are scoped to Cloudflare data-center locations and can take a few seconds to propagate.",
     ],
   };
 }
@@ -266,6 +282,7 @@ function health(env: Env, request: Request): JsonRecord {
     wafStatus: env.WAF_RULE_STATUS ?? "unknown",
     botStatus: env.BOT_POLICY_MODE ?? "unknown",
     apiDiscoveryStatus: env.API_DISCOVERY_STATUS ?? "unknown",
+    rateLimitStatus: env.RATE_LIMIT_STATUS ?? "unknown",
     discoveryStatus: "available",
   };
 }
@@ -273,7 +290,7 @@ function health(env: Env, request: Request): JsonRecord {
 const openapi = `openapi: 3.1.0
 info:
   title: Innovative Future Solutions Application Security Demo
-  version: 1.2.0
+  version: 1.3.0
   description: Public-safe endpoints used by the Cloudflare application-security walkthrough.
 servers:
   - url: https://innovativefuturesolutions.com
@@ -313,6 +330,13 @@ paths:
       responses:
         '200':
           description: Demo profile
+  /api/demo/burst-control:
+    get:
+      operationId: getBurstControlTarget
+      summary: Return a lightweight response until the edge rate limit blocks the request
+      responses:
+        '200': { description: Request reached the Worker }
+        '429': { description: Request was rate limited at the Cloudflare edge }
   /api/demo/login:
     post:
       operationId: submitDemoLogin
@@ -344,6 +368,7 @@ Public surfaces:
 - /api/demo/preflight — live readiness evidence
 - /api/demo/request-inspection — redacted edge execution context
 - /api/demo/profile — safe API Discovery traffic target
+- /api/demo/burst-control — isolated edge rate-limit proof target
 - /openapi.yaml — API description
 
 The /api/demo/login endpoint validates Cloudflare Turnstile tokens server-side and never creates a real user session.
@@ -378,6 +403,17 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
       id: "demo-visitor",
       role: "security-evaluator",
       dataClassification: "public synthetic demo data",
+    });
+  }
+
+  if (url.pathname === "/api/demo/burst-control" && method === "GET") {
+    const cf = request.cf as IncomingRequestCfProperties | undefined;
+    return apiSuccess({
+      allowed: true,
+      meaning: "This request reached Worker code. A 429 response proves the edge rate limit acted first.",
+      observedAt: new Date().toISOString(),
+      edge: { colo: cf?.colo ?? "unknown" },
+      requestId: requestId(request),
     });
   }
 
