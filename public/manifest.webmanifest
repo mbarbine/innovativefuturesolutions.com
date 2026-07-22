@@ -1,0 +1,9 @@
+{
+  "name": "Application Security at the Edge",
+  "short_name": "IFS Security",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07110d",
+  "theme_color": "#07110d",
+  "description": "Interactive Cloudflare application-security walkthrough"
+}

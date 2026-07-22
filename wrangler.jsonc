@@ -1,0 +1,34 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "innovative-future-solutions-security-demo",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-21",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*",
+      "/openapi.yaml",
+      "/llms*.txt",
+      "/llms-index.json",
+      "/robots.txt",
+      "/sitemap.xml",
+      "/.well-known/*"
+    ]
+  },
+  "routes": [
+    {
+      "pattern": "innovativefuturesolutions.com",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.innovativefuturesolutions.com",
+      "custom_domain": true
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}
