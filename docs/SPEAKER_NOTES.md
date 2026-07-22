@@ -629,13 +629,15 @@ If the widget cannot load, show `/api/config` to prove the public site key is co
 # Slide 10 — API Discovery and API Gateway
 
 **Timing:** 90–120 seconds
-**Objective:** Show intended API inventory, live endpoint behavior, redaction, plan boundaries, and a real 200→429 edge enforcement loop.
+**Objective:** Show intended API inventory, live endpoint behavior, redaction, a highlighted Cloudflare control graph, plan boundaries, and a real 200→429 edge enforcement loop.
 
 ## Say
 
 “You cannot secure an API surface you cannot see. Enterprise API Discovery observes traffic and normalizes similar paths. Endpoint Management, which is live here, stores the operations the team chooses to manage. The OpenAPI contract represents intended behavior; an Enterprise POC would compare that contract to observed traffic to reveal undocumented or shadow APIs.”
 
 “This inventory has eight declared operations. I can execute each public GET operation from the slide and see the HTTP status, Ray ID, and public-safe JSON. The request-inspection endpoint proves the Worker saw the hostname, path, protocol, TLS, and colo while intentionally excluding IP addresses, cookies, credentials, and bodies.”
+
+“The canary link sends the live `/api/security-controls` response into PlatPhorm JSON on Cloudflare. It opens directly in Graph view and highlights WAF, bot controls, managed API endpoints, and rate limiting as distinct paths. The graph is fetched from this Worker at presentation time; it is not a fabricated screenshot.”
 
 “The burst-control route is deliberately isolated. A normal response returns 200 from the Worker. The rate-limiting rule counts requests by data-center location and client IP; after the threshold, the edge returns 429 for ten seconds. The exact number of 200s can vary because distributed counters may update with a short delay—the security proof is the transition from Worker JSON to an edge 429.”
 
@@ -646,10 +648,11 @@ If the widget cannot load, show `/api/config` to prove the public site key is co
 Run these operations in order:
 
 1. `/api/health`
-2. `/api/demo/preflight`
-3. `/api/demo/request-inspection`
-4. Select **Run controlled burst** and narrate the allowed count, wait state, and first 429.
-5. Open **Security → WAF → Rate limiting rules** only if the panel wants the configuration detail.
+2. `/api/security-controls`
+3. Select **Open the highlighted control graph** and point out the four color-coded control paths.
+4. Return to the deck, then run `/api/demo/preflight` and `/api/demo/request-inspection`.
+5. Select **Run controlled burst** and narrate the allowed count, wait state, and first 429.
+6. Open **Security → WAF → Rate limiting rules** only if the panel wants the configuration detail.
 
 ## Proof to point at
 
@@ -657,6 +660,7 @@ Run these operations in order:
 - Eight declared operations.
 - Redacted inspection response.
 - OpenAPI document linked from the slide.
+- Live PlatPhorm JSON canary graph sourced from `/api/security-controls`, with WAF, bot, API, and rate-limit highlighting.
 - Bounded burst transitions from Worker 200 to edge 429 on the isolated path.
 - Active rate-limit rule: five requests per 10 seconds with a 10-second mitigation timeout.
 

@@ -325,6 +325,10 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .login-card { display: flex; flex-direction: column; gap: 11px; }.login-card label { color: var(--muted); font-family: var(--mono); font-size: 9px; text-transform: uppercase; }.login-card input { width: 100%; padding: 13px; color: var(--ink); border: 1px solid var(--line); outline: 0; background: #07110d; font-family: var(--mono); font-size: 12px; }.login-card input:focus { border-color: rgba(183,255,101,.65); }.turnstile-box { min-height: 68px; display: flex; align-items: center; color: var(--muted); font-size: 11px; }.login-card output { min-height: 34px; color: var(--muted); font-size: 10px; line-height: 1.5; }
 
 .api-status { display: flex; align-items: center; gap: 10px; margin: 30px 0 18px; color: var(--muted); font-family: var(--mono); font-size: 10px; text-transform: capitalize; }.api-status span { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px var(--green); }
+.graph-handoff { max-width: 620px; margin-top: 16px; padding: 13px 15px; display: flex; align-items: center; justify-content: space-between; gap: 18px; color: var(--ink); border: 1px solid rgba(183,255,101,.32); background: linear-gradient(110deg, rgba(183,255,101,.09), rgba(73,151,255,.045)); text-decoration: none; transition: border-color 160ms ease, background 160ms ease, transform 160ms ease; }
+.graph-handoff:hover, .graph-handoff:focus-visible { border-color: rgba(183,255,101,.72); background: linear-gradient(110deg, rgba(183,255,101,.14), rgba(73,151,255,.08)); transform: translateY(-1px); }
+.graph-handoff small, .graph-handoff strong { display: block; }.graph-handoff small { color: var(--green); font-family: var(--mono); font-size: 8px; letter-spacing: .13em; }.graph-handoff strong { margin-top: 4px; font-size: 12px; }
+.graph-legend { flex: 0 0 auto; display: flex; gap: 4px; }.graph-legend i { padding: 4px 6px; border: 1px solid currentColor; border-radius: 999px; font-family: var(--mono); font-size: 7px; font-style: normal; letter-spacing: .05em; }.graph-legend .waf { color: #ff78aa; }.graph-legend .bots { color: #55d8ff; }.graph-legend .apis { color: #9d8cff; }.graph-legend .rate { color: #ffad66; }
 .architecture-handoff { max-width: 580px; margin: 24px 0 0; padding-left: 14px; color: #7c8b82; border-left: 2px solid rgba(183,255,101,.42); font-size: 11px; line-height: 1.55; }
 .api-explorer { min-width: 0; }
 .endpoint-list { border: 1px solid var(--line); background: rgba(8,19,13,.7); }
@@ -492,6 +496,7 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
   .presenter-toggle span { display: none; }
   .presenter-toggle b { font-size: 7px; }
   .presenter-meta { grid-template-columns: 1fr; }
+  .graph-handoff { align-items: flex-start; flex-direction: column; gap: 10px; }
   .presenter-meta > div { min-height: 58px; border-right: 0; border-bottom: 1px solid var(--line); }
   .preflight-grid { grid-template-columns: 1fr; }
   .presenter-actions > * { flex: 1 1 140px; text-align: center; }

@@ -27,6 +27,7 @@ Three architecture notes follow the live demo:
 - Run preflight to check the Worker, hostname, HTTPS/TLS, WAF, bot control, Turnstile, and API inventory from public-safe live evidence.
 - Use `T` for the talk timer, `F` for fullscreen, and the arrow keys to navigate.
 - Execute public GET operations directly from the API Discovery slide and inspect the status, Ray/request ID, and redacted JSON response.
+- Open the live Cloudflare canary from the API Discovery slide to visualize `/api/security-controls` as a highlighted WAF, bot, API, and rate-limit graph.
 - Download the generated [speaker notes](https://innovativefuturesolutions.com/downloads/cloudflare-application-security-speaker-notes.docx) from the command center.
 
 The storage, async/AI, and migration interactions are labeled architecture simulations. They explain selection criteria and trade-offs without claiming that optional platform services are provisioned by this demo.

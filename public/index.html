@@ -6,6 +6,7 @@
     <meta name="description" content="A live application security walkthrough running at Cloudflare's edge." />
     <meta name="theme-color" content="#07110d" />
     <title>Application Security at the Edge — Innovative Future Solutions</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%2307110d'/%3E%3Ccircle cx='32' cy='32' r='27' fill='none' stroke='%23b7ff65' stroke-width='3'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23b7ff65'%3EIF%3C/text%3E%3C/svg%3E" />
     <link rel="stylesheet" href="/styles.css" />
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
     <script src="/app.js" type="module"></script>
@@ -262,6 +263,12 @@ Deployed globally</code></pre>
             <p class="lede compact">API Shield inventories routes at the edge. The OpenAPI document makes intended operations explicit; Endpoint Management records the real surface.</p>
             <div class="api-status"><span></span><b data-live="api-status">Checking endpoint management…</b></div>
             <a class="text-link" href="/openapi.yaml">Open the machine-readable schema →</a>
+            <a class="graph-handoff" href="https://json.innovativefuturesolutions.com/" target="_blank" rel="noopener noreferrer">
+              <span><small>LIVE CLOUDFLARE CANARY</small><strong>Open the highlighted control graph ↗</strong></span>
+              <span class="graph-legend" aria-label="Graph highlights WAF, bots, APIs, and rate limiting">
+                <i class="waf">WAF</i><i class="bots">BOTS</i><i class="apis">APIs</i><i class="rate">RATE</i>
+              </span>
+            </a>
             <div class="burst-control">
               <div><small>LIVE ABUSE CONTROL</small><strong data-burst-summary>5 requests / 10 seconds</strong></div>
               <button class="secondary compact-control" type="button" data-action="run-burst">Run controlled burst</button>
