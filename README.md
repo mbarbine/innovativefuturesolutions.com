@@ -1,6 +1,6 @@
 # Innovative Future Solutions — Application Security at the Edge
 
-An interactive slide deck and live application-security demonstration deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com).
+An interactive slide deck and live application-security demonstration deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com). Version 1.2.0 adds a presenter command center, live readiness preflight, an executable API inventory, architecture decision labs, and a separate interview speaker guide.
 
 The guided walkthrough covers:
 
@@ -21,10 +21,21 @@ Three architecture notes follow the live demo:
 - Moving asynchronous, AI, retrieval, and browser work to Queues, Workers AI, Vectorize, and Browser Run
 - Reasoning through Cloudflare Workers versus regional serverless and planning an incremental migration
 
+## Presenter workflow
+
+- Select **Present** or press `P` to open the command center.
+- Run preflight to check the Worker, hostname, HTTPS/TLS, WAF, bot control, Turnstile, and API inventory from public-safe live evidence.
+- Use `T` for the talk timer, `F` for fullscreen, and the arrow keys to navigate.
+- Execute public GET operations directly from the API Discovery slide and inspect the status, Ray/request ID, and redacted JSON response.
+- Download the generated [speaker notes](https://innovativefuturesolutions.com/downloads/cloudflare-application-security-speaker-notes.docx) from the command center.
+
+The storage, async/AI, and migration interactions are labeled architecture simulations. They explain selection criteria and trade-offs without claiming that optional platform services are provisioned by this demo.
+
 ## Architecture
 
 - `public/` contains the responsive, keyboard-, touch-, and numbered-rail-navigable slide deck.
 - `src/index.ts` serves public-safe API and discovery routes and performs Turnstile validation.
+- `docs/SPEAKER_NOTES.md` is the editable speaker-guide source; `scripts/build-speaker-notes.py` generates the downloadable DOCX.
 - Cloudflare WAF and bot controls execute before the Worker.
 - Turnstile's secret and deployment control metadata are Worker secrets, never repository files.
 
@@ -42,6 +53,16 @@ pnpm typecheck
 pnpm test
 pnpm build
 ```
+
+The public evidence API includes:
+
+- `GET /api/health`
+- `GET /api/security-controls`
+- `GET /api/demo/preflight`
+- `GET /api/demo/request-inspection`
+- `GET /api/demo/profile`
+- `POST /api/demo/login`
+- `GET /api/docs`
 
 ## Deployment
 

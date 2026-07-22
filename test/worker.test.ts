@@ -67,12 +67,60 @@ describe("application security worker", () => {
     };
 
     expect(body.ok).toBe(true);
-    expect(body.data.apiGateway.operations).toHaveLength(4);
+    expect(body.data.apiGateway.operations).toHaveLength(7);
     expect(body.data.apiGateway.operations).toContainEqual({
       method: "POST",
       path: "/api/demo/login",
       control: "Turnstile verified",
     });
+  });
+
+  it("returns a public-safe preflight matrix backed by configuration state", async () => {
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/demo/preflight"),
+      env({
+        WAF_RULE_STATUS: "active",
+        BOT_POLICY_MODE: "bot-fight-mode",
+        TURNSTILE_SITE_KEY: "public-site-key",
+        TURNSTILE_SECRET: "server-secret",
+        API_DISCOVERY_STATUS: "endpoint-management-configured",
+      }),
+    );
+    const body = await response.json() as {
+      ok: boolean;
+      data: { checks: Array<{ id: string; status: string; evidence: string }> };
+    };
+
+    expect(response.status).toBe(200);
+    expect(body.ok).toBe(true);
+    expect(body.data.checks).toHaveLength(7);
+    expect(body.data.checks).toContainEqual({
+      id: "waf",
+      label: "WAF custom rule",
+      status: "pass",
+      evidence: "active",
+    });
+    expect(JSON.stringify(body)).not.toContain("server-secret");
+  });
+
+  it("returns redacted edge request evidence without sensitive headers", async () => {
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/demo/request-inspection", {
+        headers: {
+          authorization: "Bearer should-never-appear",
+          cookie: "session=should-never-appear",
+          "x-forwarded-for": "192.0.2.10",
+        },
+      }),
+      env(),
+    );
+    const text = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(text).toContain("Cloudflare Workers V8 isolate");
+    expect(text).toContain("No IP address, cookies, credentials, or request body");
+    expect(text).not.toContain("should-never-appear");
+    expect(text).not.toContain("192.0.2.10");
   });
 
   it("returns a standard error for unknown API routes", async () => {

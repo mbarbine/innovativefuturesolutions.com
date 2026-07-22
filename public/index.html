@@ -38,7 +38,13 @@
             <p class="lede">A presenter-led walkthrough from deployment to edge enforcement, with a live proof point at every step.</p>
             <div class="hero-actions">
               <button class="primary" data-action="next">Begin with deployment <span>01 →</span></button>
+              <button class="secondary" data-action="run-preflight">Run live preflight</button>
               <a class="text-link" href="/openapi.yaml">Inspect the API contract</a>
+            </div>
+            <div class="live-proof-strip" aria-live="polite">
+              <span class="status-dot"></span>
+              <b data-live="preflight-summary">Live evidence is ready to inspect</b>
+              <small data-live="preflight-observed">Not yet run</small>
             </div>
           </div>
           <aside class="runbook-card" aria-label="Ten-step demo runbook">
@@ -166,6 +172,7 @@ Deployed globally</code></pre>
             <div class="button-row">
               <button class="secondary" data-action="safe-request">Run safe API request</button>
               <button class="danger" data-action="attack-request">Send XSS probe</button>
+              <button class="secondary compact-control" data-action="copy-attack">Copy cURL</button>
             </div>
             <div class="demo-runner" aria-label="Breach test progress">
               <span data-runner="baseline"><i>01</i> Baseline</span>
@@ -199,6 +206,10 @@ Deployed globally</code></pre>
               <div><dt>Ray ID</dt><dd data-result="ray">Run the XSS probe first</dd></div>
               <div><dt>Observed</dt><dd data-result="time">—</dd></div>
             </dl>
+            <div class="event-actions">
+              <button class="secondary compact-control" data-action="copy-evidence">Copy evidence</button>
+              <button class="secondary compact-control" data-action="clear-evidence">Clear</button>
+            </div>
             <p>Security Event visibility is read from the Cloudflare dashboard; this public slide exposes no visitor IP data.</p>
           </aside>
         </div>
@@ -253,12 +264,21 @@ Deployed globally</code></pre>
             <a class="text-link" href="/openapi.yaml">Open the machine-readable schema →</a>
             <p class="architecture-handoff">This demo remains stateless. If the API gained durable data, the consistency requirement—not product popularity—would choose the storage primitive.</p>
           </div>
-          <div class="endpoint-list">
-            <div class="endpoint-head"><span>METHOD</span><span>ENDPOINT</span><span>CONTROL</span></div>
-            <div><b class="get">GET</b><code>/api/health</code><span>catalogued</span></div>
-            <div><b class="get">GET</b><code>/api/security-controls</code><span>catalogued</span></div>
-            <div><b class="get">GET</b><code>/api/demo/profile</code><span>catalogued</span></div>
-            <div><b class="post">POST</b><code>/api/demo/login</code><span>Turnstile</span></div>
+          <div class="api-explorer">
+            <div class="endpoint-list" aria-label="Interactive API operation inventory">
+              <div class="endpoint-head"><span>METHOD</span><span>ENDPOINT</span><span>TRY</span></div>
+              <button type="button" data-api-path="/api/health"><b class="get">GET</b><code>/api/health</code><span>run →</span></button>
+              <button type="button" data-api-path="/api/security-controls"><b class="get">GET</b><code>/api/security-controls</code><span>run →</span></button>
+              <button type="button" data-api-path="/api/demo/preflight"><b class="get">GET</b><code>/api/demo/preflight</code><span>run →</span></button>
+              <button type="button" data-api-path="/api/demo/request-inspection"><b class="get">GET</b><code>/api/demo/request-inspection</code><span>run →</span></button>
+              <button type="button" data-api-path="/api/demo/profile"><b class="get">GET</b><code>/api/demo/profile</code><span>run →</span></button>
+              <div><b class="post">POST</b><code>/api/demo/login</code><span>Turnstile</span></div>
+              <div><b class="get">GET</b><code>/api/docs</code><span>catalogued</span></div>
+            </div>
+            <div class="api-console" aria-live="polite">
+              <div><span>LIVE EDGE RESPONSE</span><b data-api-status>READY</b></div>
+              <pre data-api-output>Select a GET operation to inspect its public-safe response.</pre>
+            </div>
           </div>
         </div>
       </section>
@@ -288,12 +308,23 @@ Deployed globally</code></pre>
           <h2>State is a<br /><em>design choice.</em></h2>
           <p>Start with the invariant: global read speed, relational queries, strong coordination, object durability, or an existing regional database.</p>
         </div>
+        <div class="decision-lab" aria-label="Storage architecture decision lab">
+          <span>INTERACTIVE SCENARIO</span>
+          <div>
+            <button type="button" data-storage-scenario="flags">Feature flags</button>
+            <button type="button" data-storage-scenario="room">Multiplayer room</button>
+            <button type="button" data-storage-scenario="accounts">Customer records</button>
+            <button type="button" data-storage-scenario="media">Media library</button>
+            <button type="button" data-storage-scenario="postgres">Existing Postgres</button>
+          </div>
+          <output data-storage-output>Choose a workload; the recommendation follows the consistency and data-shape requirement.</output>
+        </div>
         <div class="product-grid storage-grid">
-          <article><b>KV</b><strong>Read-heavy global config</strong><p>Low-latency reads with eventual consistency. Good for flags, preferences, and cached responses—not transactional balances.</p><span>OPTIMIZE FOR READS</span></article>
-          <article><b>DURABLE OBJECTS</b><strong>One authority per entity</strong><p>Strongly consistent coordination for chat rooms, locks, rate limits, multiplayer state, and collaborative sessions.</p><span>OPTIMIZE FOR COORDINATION</span></article>
-          <article><b>D1</b><strong>Relational application data</strong><p>Managed serverless SQL with SQLite semantics for structured metadata, accounts, and lightweight full-stack applications.</p><span>OPTIMIZE FOR SQL</span></article>
-          <article><b>R2</b><strong>Unstructured objects</strong><p>S3-compatible, strongly consistent object storage with no egress fees for assets, uploads, backups, and datasets.</p><span>OPTIMIZE FOR BYTES</span></article>
-          <article><b>HYPERDRIVE</b><strong>Keep the existing database</strong><p>Pool connections and accelerate PostgreSQL or MySQL. Disable query caching where read-after-write consistency is required.</p><span>OPTIMIZE THE MIGRATION</span></article>
+          <article data-storage-service="kv"><b>KV</b><strong>Read-heavy global config</strong><p>Low-latency reads with eventual consistency. Good for flags, preferences, and cached responses—not transactional balances.</p><span>OPTIMIZE FOR READS</span></article>
+          <article data-storage-service="durable"><b>DURABLE OBJECTS</b><strong>One authority per entity</strong><p>Strongly consistent coordination for chat rooms, locks, rate limits, multiplayer state, and collaborative sessions.</p><span>OPTIMIZE FOR COORDINATION</span></article>
+          <article data-storage-service="d1"><b>D1</b><strong>Relational application data</strong><p>Managed serverless SQL with SQLite semantics for structured metadata, accounts, and lightweight full-stack applications.</p><span>OPTIMIZE FOR SQL</span></article>
+          <article data-storage-service="r2"><b>R2</b><strong>Unstructured objects</strong><p>S3-compatible, strongly consistent object storage with no egress fees for assets, uploads, backups, and datasets.</p><span>OPTIMIZE FOR BYTES</span></article>
+          <article data-storage-service="hyperdrive"><b>HYPERDRIVE</b><strong>Keep the existing database</strong><p>Pool connections and accelerate PostgreSQL or MySQL. Disable query caching where read-after-write consistency is required.</p><span>OPTIMIZE THE MIGRATION</span></article>
         </div>
       </section>
 
@@ -303,14 +334,18 @@ Deployed globally</code></pre>
           <h2>The edge is a platform.<br /><em>Not just a proxy.</em></h2>
           <p>Keep the request path short, then bind purpose-built services for background work, inference, retrieval, and browser automation.</p>
         </div>
-        <div class="platform-pipeline" aria-label="Cloudflare platform service choices">
-          <article><span>01</span><b>Worker</b><strong>Respond now</strong><p>Authenticate, route, validate, transform, and return the latency-sensitive result.</p></article>
-          <article><span>02</span><b>Queues</b><strong>Process later</strong><p>Decouple expensive work with at-least-once delivery; consumers must be idempotent.</p></article>
-          <article><span>03</span><b>Workers AI</b><strong>Run inference</strong><p>Invoke open-source models on serverless GPUs without provisioning inference infrastructure.</p></article>
-          <article><span>04</span><b>Vectorize</b><strong>Retrieve context</strong><p>Store and query embeddings for semantic search, recommendations, and RAG.</p></article>
-          <article><span>05</span><b>Browser Run</b><strong>Operate the web</strong><p>Control headless browsers for screenshots, PDFs, scraping, testing, and agent tasks.</p></article>
+        <div class="pipeline-controls">
+          <span>ARCHITECTURE SIMULATION · NOT PROVISIONED BY THIS DEMO</span>
+          <button class="secondary compact-control" type="button" data-action="run-pipeline">Animate request path</button>
         </div>
-        <p class="binding-note"><strong>Bindings are the connective tissue:</strong> the Worker receives platform capabilities through its environment instead of exposing service credentials to browser code.</p>
+        <div class="platform-pipeline" aria-label="Cloudflare platform service choices">
+          <article data-pipeline-step="0"><span>01</span><b>Worker</b><strong>Respond now</strong><p>Authenticate, route, validate, transform, and return the latency-sensitive result.</p></article>
+          <article data-pipeline-step="1"><span>02</span><b>Queues</b><strong>Process later</strong><p>Decouple expensive work with at-least-once delivery; consumers must be idempotent.</p></article>
+          <article data-pipeline-step="2"><span>03</span><b>Workers AI</b><strong>Run inference</strong><p>Invoke open-source models on serverless GPUs without provisioning inference infrastructure.</p></article>
+          <article data-pipeline-step="3"><span>04</span><b>Vectorize</b><strong>Retrieve context</strong><p>Store and query embeddings for semantic search, recommendations, and RAG.</p></article>
+          <article data-pipeline-step="4"><span>05</span><b>Browser Run</b><strong>Operate the web</strong><p>Control headless browsers for screenshots, PDFs, scraping, testing, and agent tasks.</p></article>
+        </div>
+        <p class="binding-note" data-pipeline-output><strong>Bindings are the connective tissue:</strong> the Worker receives platform capabilities through its environment instead of exposing service credentials to browser code.</p>
       </section>
 
       <section class="slide appendix-slide" data-title="Cloudflare and regional serverless" aria-hidden="true">
@@ -325,6 +360,11 @@ Deployed globally</code></pre>
               <li>Select KV, Durable Objects, D1, or R2 from consistency and data-shape requirements.</li>
               <li>Push long-running or failure-prone work through Queues; instrument both sides.</li>
             </ol>
+            <div class="migration-lab" aria-label="Migration decision lab">
+              <span>CHOOSE THE DOMINANT CONSTRAINT</span>
+              <div><button type="button" data-migration-goal="latency">Latency</button><button type="button" data-migration-goal="state">Shared state</button><button type="button" data-migration-goal="aws">AWS data gravity</button><button type="button" data-migration-goal="batch">Long jobs</button></div>
+              <output data-migration-output>Choose a constraint to produce a defensible migration answer.</output>
+            </div>
           </div>
           <div class="comparison-table" role="table" aria-label="Cloudflare Workers and AWS Lambda comparison">
             <div role="row"><span role="columnheader">DIMENSION</span><b role="columnheader">WORKERS</b><b role="columnheader">LAMBDA</b></div>
@@ -338,9 +378,34 @@ Deployed globally</code></pre>
       </section>
     </main>
 
+    <dialog class="presenter-console" id="presenter-console" aria-labelledby="presenter-title">
+      <div class="presenter-head">
+        <div><span>PRESENTER COMMAND CENTER</span><h2 id="presenter-title">Live demo readiness</h2></div>
+        <button class="dialog-close" type="button" data-action="close-presenter" aria-label="Close presenter command center">×</button>
+      </div>
+      <div class="presenter-meta">
+        <div><small>CURRENT SLIDE</small><strong data-presenter-slide>01 · Application Security</strong></div>
+        <div><small>ELAPSED</small><strong id="presenter-timer">00:00</strong></div>
+        <div><small>READINESS</small><strong data-presenter-readiness>Not checked</strong></div>
+      </div>
+      <div class="presenter-actions">
+        <button class="primary" type="button" data-action="toggle-timer">Start timer</button>
+        <button class="secondary" type="button" data-action="run-preflight">Run preflight</button>
+        <button class="secondary" type="button" data-action="copy-slide-link">Copy slide link</button>
+        <button class="secondary" type="button" data-action="fullscreen">Fullscreen</button>
+        <a class="secondary as-link" href="/downloads/cloudflare-application-security-speaker-notes.docx" download>Download notes</a>
+        <button class="danger" type="button" data-action="reset-demo">Reset demo</button>
+      </div>
+      <div class="preflight-grid" id="preflight-grid" aria-live="polite">
+        <p>Run preflight to verify the Worker, custom domain, TLS, WAF, bots, Turnstile, and API inventory from live evidence.</p>
+      </div>
+      <output class="presenter-output" id="presenter-output" aria-live="polite">Keyboard: ←/→ navigate · P presenter · T timer · F fullscreen · ? shortcuts</output>
+    </dialog>
+
     <nav class="deck-nav" aria-label="Slide navigation">
       <button class="nav-arrow" data-action="previous" aria-label="Previous slide">←</button>
       <div class="chapter-nav" id="chapter-nav" aria-label="Jump to slide"></div>
+      <button class="presenter-toggle" type="button" data-action="open-presenter"><span>Present</span><b data-nav-timer>00:00</b></button>
       <span id="slide-count">01 / 11</span>
       <button class="nav-arrow" data-action="next" aria-label="Next slide">→</button>
     </nav>

@@ -11,6 +11,18 @@ export interface Env {
 
 type JsonRecord = Record<string, unknown>;
 
+const APP_VERSION = "1.2.0";
+
+const apiOperations = [
+  { method: "GET", path: "/api/health", control: "public health" },
+  { method: "GET", path: "/api/security-controls", control: "public control snapshot" },
+  { method: "GET", path: "/api/demo/preflight", control: "live readiness evidence" },
+  { method: "GET", path: "/api/demo/request-inspection", control: "redacted edge context" },
+  { method: "GET", path: "/api/demo/profile", control: "public synthetic data" },
+  { method: "POST", path: "/api/demo/login", control: "Turnstile verified" },
+  { method: "GET", path: "/api/docs", control: "public API documentation" },
+] as const;
+
 const jsonHeaders = {
   "content-type": "application/json; charset=utf-8",
   "cache-control": "no-store",
@@ -105,13 +117,97 @@ function securityControls(env: Env): JsonRecord {
     apiGateway: {
       status: env.API_DISCOVERY_STATUS ?? "unknown",
       note: "API Shield Endpoint Management is available on all plans. Worker-backed endpoint metrics may be unavailable.",
-      operations: [
-        { method: "GET", path: "/api/health", control: "public health" },
-        { method: "GET", path: "/api/security-controls", control: "public control snapshot" },
-        { method: "GET", path: "/api/demo/profile", control: "public synthetic data" },
-        { method: "POST", path: "/api/demo/login", control: "Turnstile verified" },
-      ],
+      operations: apiOperations,
     },
+  };
+}
+
+function requestInspection(request: Request): JsonRecord {
+  const url = new URL(request.url);
+  const cf = request.cf as IncomingRequestCfProperties | undefined;
+  return {
+    observedAt: new Date().toISOString(),
+    request: {
+      method: request.method,
+      scheme: url.protocol.replace(":", ""),
+      host: url.host,
+      path: url.pathname,
+    },
+    edge: {
+      colo: cf?.colo ?? "unknown",
+      country: cf?.country ?? "unknown",
+      tlsVersion: cf?.tlsVersion ?? "unknown",
+      httpProtocol: cf?.httpProtocol ?? "unknown",
+    },
+    execution: {
+      workerExecuted: true,
+      requestId: requestId(request),
+      runtime: "Cloudflare Workers V8 isolate",
+    },
+    privacy: "No IP address, cookies, credentials, or request body are returned by this endpoint.",
+  };
+}
+
+function preflight(env: Env, request: Request): JsonRecord {
+  const url = new URL(request.url);
+  const cf = request.cf as IncomingRequestCfProperties | undefined;
+  const hostReady = ["innovativefuturesolutions.com", "www.innovativefuturesolutions.com"].includes(url.hostname);
+  const tlsReady = url.protocol === "https:" && Boolean(cf?.tlsVersion && cf.tlsVersion !== "unknown");
+  const checks = [
+    {
+      id: "worker",
+      label: "Worker runtime",
+      status: "pass",
+      evidence: `${APP_VERSION} executed in ${cf?.colo ?? "local"}`,
+    },
+    {
+      id: "domain",
+      label: "Custom domain",
+      status: hostReady ? "pass" : "warn",
+      evidence: url.hostname,
+    },
+    {
+      id: "tls",
+      label: "HTTPS and TLS",
+      status: tlsReady ? "pass" : "warn",
+      evidence: cf?.tlsVersion ?? url.protocol,
+    },
+    {
+      id: "waf",
+      label: "WAF custom rule",
+      status: env.WAF_RULE_STATUS === "active" ? "pass" : "warn",
+      evidence: env.WAF_RULE_STATUS ?? "unknown",
+    },
+    {
+      id: "bots",
+      label: "Bot control",
+      status: env.BOT_POLICY_MODE === "bot-fight-mode" ? "pass" : "warn",
+      evidence: env.BOT_POLICY_MODE ?? "unknown",
+    },
+    {
+      id: "turnstile",
+      label: "Turnstile Siteverify",
+      status: env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET ? "pass" : "warn",
+      evidence: env.TURNSTILE_SECRET ? "server-side configured" : "not configured",
+    },
+    {
+      id: "api",
+      label: "API inventory",
+      status: env.API_DISCOVERY_STATUS === "endpoint-management-configured" ? "pass" : "warn",
+      evidence: `${apiOperations.length} declared operations`,
+    },
+  ];
+
+  return {
+    ready: checks.every((check) => check.status === "pass"),
+    observedAt: new Date().toISOString(),
+    evidenceMode: "live request plus deployment control snapshot",
+    checks,
+    limitations: [
+      "Bot Fight Mode is the configured Free-plan control; Enterprise bot scores are not claimed.",
+      "Worker-backed API Shield endpoint metrics may not populate even when endpoints are catalogued.",
+      "Security Event details remain in the authenticated Cloudflare dashboard.",
+    ],
   };
 }
 
@@ -156,7 +252,7 @@ function health(env: Env, request: Request): JsonRecord {
   const cf = request.cf as IncomingRequestCfProperties | undefined;
   return {
     service: "innovative-future-solutions-security-demo",
-    version: "1.1.0",
+    version: APP_VERSION,
     environment: "production",
     status: "healthy",
     timestamp: new Date().toISOString(),
@@ -177,7 +273,7 @@ function health(env: Env, request: Request): JsonRecord {
 const openapi = `openapi: 3.1.0
 info:
   title: Innovative Future Solutions Application Security Demo
-  version: 1.1.0
+  version: 1.2.0
   description: Public-safe endpoints used by the Cloudflare application-security walkthrough.
 servers:
   - url: https://innovativefuturesolutions.com
@@ -196,6 +292,20 @@ paths:
       responses:
         '200':
           description: Current configured control summary
+  /api/demo/preflight:
+    get:
+      operationId: getDemoPreflight
+      summary: Run public-safe readiness checks using live edge and configured-control evidence
+      responses:
+        '200':
+          description: Readiness evidence
+  /api/demo/request-inspection:
+    get:
+      operationId: inspectDemoRequest
+      summary: Return redacted request and Cloudflare edge execution context
+      responses:
+        '200':
+          description: Redacted edge request context
   /api/demo/profile:
     get:
       operationId: getDemoProfile
@@ -231,6 +341,8 @@ Public surfaces:
 - / — application-security slide deck
 - /api/health — live edge status
 - /api/security-controls — configured-control snapshot
+- /api/demo/preflight — live readiness evidence
+- /api/demo/request-inspection — redacted edge execution context
 - /api/demo/profile — safe API Discovery traffic target
 - /openapi.yaml — API description
 
@@ -251,6 +363,14 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
 
   if (url.pathname === "/api/security-controls" && method === "GET") {
     return apiSuccess(securityControls(env));
+  }
+
+  if (url.pathname === "/api/demo/preflight" && method === "GET") {
+    return apiSuccess(preflight(env, request));
+  }
+
+  if (url.pathname === "/api/demo/request-inspection" && method === "GET") {
+    return apiSuccess(requestInspection(request));
   }
 
   if (url.pathname === "/api/demo/profile" && method === "GET") {
