@@ -3,7 +3,7 @@
   "name": "innovative-future-solutions-security-demo",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-21",
-  "workers_dev": true,
+  "workers_dev": false,
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
