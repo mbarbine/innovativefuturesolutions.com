@@ -105,6 +105,12 @@ function securityControls(env: Env): JsonRecord {
     apiGateway: {
       status: env.API_DISCOVERY_STATUS ?? "unknown",
       note: "API Shield Endpoint Management is available on all plans. Worker-backed endpoint metrics may be unavailable.",
+      operations: [
+        { method: "GET", path: "/api/health", control: "public health" },
+        { method: "GET", path: "/api/security-controls", control: "public control snapshot" },
+        { method: "GET", path: "/api/demo/profile", control: "public synthetic data" },
+        { method: "POST", path: "/api/demo/login", control: "Turnstile verified" },
+      ],
     },
   };
 }
@@ -150,7 +156,7 @@ function health(env: Env, request: Request): JsonRecord {
   const cf = request.cf as IncomingRequestCfProperties | undefined;
   return {
     service: "innovative-future-solutions-security-demo",
-    version: "1.0.0",
+    version: "1.1.0",
     environment: "production",
     status: "healthy",
     timestamp: new Date().toISOString(),
@@ -171,7 +177,7 @@ function health(env: Env, request: Request): JsonRecord {
 const openapi = `openapi: 3.1.0
 info:
   title: Innovative Future Solutions Application Security Demo
-  version: 1.0.0
+  version: 1.1.0
   description: Public-safe endpoints used by the Cloudflare application-security walkthrough.
 servers:
   - url: https://innovativefuturesolutions.com

@@ -1,10 +1,24 @@
 const slides = [...document.querySelectorAll(".slide")];
-const progress = document.querySelector("#progress");
 const slideCount = document.querySelector("#slide-count");
+const chapterNav = document.querySelector("#chapter-nav");
+const slideAnnouncer = document.querySelector("#slide-announcer");
+const previousButton = document.querySelector('[data-action="previous"]');
+const nextButtons = [...document.querySelectorAll('[data-action="next"]')];
 let current = 0;
 let touchStartX = null;
 let turnstileToken = "";
 let turnstileWidgetId = null;
+
+const chapterButtons = slides.map((slide, index) => {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.dataset.slideIndex = String(index);
+  button.textContent = String(index + 1).padStart(2, "0");
+  button.title = `${index + 1}. ${slide.dataset.title}`;
+  button.setAttribute("aria-label", `Go to slide ${index + 1}: ${slide.dataset.title}`);
+  chapterNav.append(button);
+  return button;
+});
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
@@ -18,14 +32,25 @@ function routeNumber() {
 function showSlide(index, updateHash = true) {
   const next = clamp(index, 0, slides.length - 1);
   slides.forEach((slide, slideIndex) => {
+    const active = slideIndex === next;
     slide.classList.toggle("was-active", slideIndex < next);
-    slide.classList.toggle("is-active", slideIndex === next);
-    slide.setAttribute("aria-hidden", String(slideIndex !== next));
+    slide.classList.toggle("is-active", active);
+    slide.setAttribute("aria-hidden", String(!active));
+    slide.inert = !active;
+    if (active) slide.scrollTop = 0;
   });
   current = next;
-  progress.style.width = `${((current + 1) / slides.length) * 100}%`;
+  chapterButtons.forEach((button, index) => {
+    button.classList.toggle("is-active", index === current);
+    button.classList.toggle("is-complete", index < current);
+    if (index === current) button.setAttribute("aria-current", "step");
+    else button.removeAttribute("aria-current");
+  });
   slideCount.textContent = `${String(current + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
   document.title = `${slides[current].dataset.title} — Innovative Future Solutions`;
+  slideAnnouncer.textContent = `Slide ${current + 1} of ${slides.length}: ${slides[current].dataset.title}`;
+  previousButton.disabled = current === 0;
+  nextButtons.forEach((button) => { button.disabled = current === slides.length - 1; });
   if (updateHash) history.replaceState(null, "", `#/${current + 1}`);
 }
 
@@ -33,6 +58,20 @@ function setText(selector, value) {
   document.querySelectorAll(selector).forEach((element) => {
     element.textContent = value;
   });
+}
+
+function setHud(name, value, live = true) {
+  const element = document.querySelector(`[data-hud="${name}"]`);
+  if (!element) return;
+  element.textContent = value;
+  element.parentElement?.classList.toggle("is-live", live);
+}
+
+function setRunner(stage, state) {
+  const element = document.querySelector(`[data-runner="${stage}"]`);
+  if (!element) return;
+  element.classList.remove("is-active", "is-complete", "is-blocked");
+  if (state) element.classList.add(state);
 }
 
 async function getJson(path, options) {
@@ -51,8 +90,14 @@ async function loadHealth() {
     setText('[data-live="colo"]', data.edge.colo);
     setText('[data-live="tls"]', data.edge.tlsVersion);
     setText('[data-live="protocol"]', data.edge.httpProtocol);
+    setHud("worker", data.status === "healthy" ? "healthy" : data.status, data.status === "healthy");
+    setHud("tls", data.edge.tlsVersion, data.edge.tlsVersion !== "unknown");
+    setHud("edge", `${data.edge.colo} edge`, data.edge.colo !== "unknown");
   } catch {
     setText('[data-live="health"]', "Edge check unavailable");
+    setHud("worker", "unavailable", false);
+    setHud("tls", "unknown", false);
+    setHud("edge", "Edge unavailable", false);
   }
 }
 
@@ -64,10 +109,17 @@ async function loadControls() {
     setText('[data-live="waf-rule"]', controls.waf.ruleId ? `Rule ${controls.waf.ruleId}` : "No rule snapshot available");
     setText('[data-live="bot-mode"]', controls.bots.mode.replaceAll("-", " "));
     setText('[data-live="api-status"]', controls.apiGateway.status.replaceAll("-", " "));
+    setHud("waf", controls.waf.status, controls.waf.status === "active");
+    setHud("bots", controls.bots.mode === "bot-fight-mode" ? "on" : controls.bots.mode, controls.bots.mode !== "unknown");
+    const operationCount = Array.isArray(controls.apiGateway.operations) ? controls.apiGateway.operations.length : 0;
+    setHud("api", operationCount ? `${operationCount} routes` : controls.apiGateway.status.replaceAll("-", " "), controls.apiGateway.status !== "unknown");
   } catch {
     setText('[data-live="waf-status"]', "unknown");
     setText('[data-live="bot-mode"]', "unknown");
     setText('[data-live="api-status"]', "status unavailable");
+    setHud("waf", "unknown", false);
+    setHud("bots", "unknown", false);
+    setHud("api", "unknown", false);
   }
 }
 
@@ -95,28 +147,47 @@ async function runProbe(type) {
     ? "/attack-lab?attack=xss&payload=%3Cscript%3Ealert(1)%3C%2Fscript%3E"
     : "/api/demo/profile";
 
-  output.textContent = `GET ${path}\n\nSending request through Cloudflare…`;
+  setRunner(isAttack ? "attack" : "baseline", "is-active");
+  output.textContent = `REQUEST  GET ${path}\n\nSending through Cloudflare's edge…`;
   badge.textContent = "WAIT";
   try {
     const response = await fetch(path, { cache: "no-store" });
     const contentType = response.headers.get("content-type") || "unknown";
     const ray = response.headers.get("cf-ray") || response.headers.get("x-request-id") || "unavailable";
-    const body = (await response.text()).slice(0, 380).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    await response.body?.cancel();
     const time = new Date().toISOString();
     const blocked = response.status === 403 || response.status === 1020;
     badge.textContent = blocked ? "BLOCKED" : `${response.status}`;
-    output.textContent = [
-      `GET ${path}`,
-      `HTTP ${response.status} ${blocked ? "BLOCKED AT EDGE" : response.statusText}`,
-      `content-type: ${contentType}`,
-      `cf-ray / request-id: ${ray}`,
-      "",
-      body || "Response body intentionally omitted by edge policy.",
-    ].join("\n");
-    if (isAttack) recordEvent(ray, time);
+    output.textContent = blocked
+      ? [
+          `REQUEST   GET ${path}`,
+          "DECISION  BLOCK",
+          "LAYER     Cloudflare WAF custom rule",
+          `STATUS    ${response.status}`,
+          `RAY ID    ${ray}`,
+          "ORIGIN    Worker not invoked",
+        ].join("\n")
+      : [
+          `REQUEST   GET ${path}`,
+          "DECISION  ALLOW",
+          `STATUS    ${response.status}`,
+          `TYPE      ${contentType}`,
+          `RAY ID    ${ray}`,
+          "ORIGIN    Worker executed",
+        ].join("\n");
+    if (isAttack) {
+      setRunner("attack", blocked ? "is-blocked" : "is-complete");
+      setRunner("evidence", blocked ? "is-complete" : "is-blocked");
+      if (blocked) recordEvent(ray, time);
+    } else {
+      setRunner("baseline", response.ok ? "is-complete" : "is-blocked");
+    }
+    return { blocked, response, ray, time };
   } catch (error) {
     badge.textContent = "ERROR";
     output.textContent = `Request could not be completed.\n${error instanceof Error ? error.message : "Unknown browser error"}`;
+    setRunner(isAttack ? "attack" : "baseline", "is-blocked");
+    return null;
   }
 }
 
@@ -127,8 +198,11 @@ async function setupTurnstile() {
     const config = body.data.turnstile;
     if (!config.configured || !config.siteKey) {
       box.textContent = "Turnstile is not configured on this deployment.";
+      setHud("turnstile", "degraded", false);
       return;
     }
+
+    setHud("turnstile", "ready", true);
 
     for (let attempt = 0; attempt < 40 && !window.turnstile; attempt += 1) {
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -149,6 +223,7 @@ async function setupTurnstile() {
     });
   } catch {
     box.textContent = "Turnstile is temporarily unavailable.";
+    setHud("turnstile", "unavailable", false);
   }
 }
 
@@ -184,6 +259,9 @@ document.addEventListener("click", (event) => {
   if (action === "refresh-health") loadHealth();
   if (action === "safe-request") runProbe("safe");
   if (action === "attack-request") runProbe("attack");
+  if (action === "view-event") showSlide(6);
+  const slideIndex = event.target.closest("[data-slide-index]")?.dataset.slideIndex;
+  if (slideIndex !== undefined) showSlide(Number(slideIndex));
 });
 
 document.addEventListener("keydown", (event) => {

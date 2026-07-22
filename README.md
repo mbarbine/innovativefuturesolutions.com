@@ -2,7 +2,7 @@
 
 An interactive slide deck and live application-security demonstration deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com).
 
-The walkthrough covers:
+The guided walkthrough covers:
 
 1. Worker deployment
 2. Custom Domains
@@ -15,9 +15,15 @@ The walkthrough covers:
 9. API Shield Endpoint Management and an OpenAPI contract
 10. The request path through Cloudflare's edge
 
+Three architecture notes follow the live demo:
+
+- Choosing between Workers KV, Durable Objects, D1, R2, and Hyperdrive based on consistency and data shape
+- Moving asynchronous, AI, retrieval, and browser work to Queues, Workers AI, Vectorize, and Browser Run
+- Reasoning through Cloudflare Workers versus regional serverless and planning an incremental migration
+
 ## Architecture
 
-- `public/` contains the responsive, keyboard- and touch-navigable slide deck.
+- `public/` contains the responsive, keyboard-, touch-, and numbered-rail-navigable slide deck.
 - `src/index.ts` serves public-safe API and discovery routes and performs Turnstile validation.
 - Cloudflare WAF and bot controls execute before the Worker.
 - Turnstile's secret and deployment control metadata are Worker secrets, never repository files.

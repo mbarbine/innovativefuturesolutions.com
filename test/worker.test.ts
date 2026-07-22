@@ -56,6 +56,25 @@ describe("application security worker", () => {
     expect(text).not.toContain("1234567890abcdef");
   });
 
+  it("returns the configured API operation inventory", async () => {
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/security-controls"),
+      env({ API_DISCOVERY_STATUS: "endpoint-management-configured" }),
+    );
+    const body = await response.json() as {
+      ok: boolean;
+      data: { apiGateway: { operations: Array<{ method: string; path: string }> } };
+    };
+
+    expect(body.ok).toBe(true);
+    expect(body.data.apiGateway.operations).toHaveLength(4);
+    expect(body.data.apiGateway.operations).toContainEqual({
+      method: "POST",
+      path: "/api/demo/login",
+      control: "Turnstile verified",
+    });
+  });
+
   it("returns a standard error for unknown API routes", async () => {
     const response = await handleRequest(
       new Request("https://innovativefuturesolutions.com/api/missing"),
