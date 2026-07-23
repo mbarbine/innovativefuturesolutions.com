@@ -23,10 +23,16 @@ describe("application security worker", () => {
 
     expect(indexHtml).not.toContain("fonts.googleapis.com");
     expect(indexHtml).not.toContain("fonts.gstatic.com");
-    expect(indexHtml).toContain('<script src="/theme.js"></script>');
+    expect(indexHtml).toContain(
+      '<link id="deck-theme" rel="stylesheet" href="/styles.css?v=20260723.1" />',
+    );
+    expect(indexHtml).toContain('<script src="/theme.js?v=20260723.1"></script>');
+    expect(indexHtml).toContain(
+      '<script src="/app.js?v=20260723.1" type="module"></script>',
+    );
     expect(themeLoader).toContain('params.get("theme") === "modern"');
-    expect(themeLoader).toContain('"/styles-modern.css"');
-    expect(themeLoader).toContain('"/styles.css"');
+    expect(themeLoader).toContain('document.getElementById("deck-theme")');
+    expect(themeLoader).toContain('"/styles-modern.css?v=20260723.1"');
     expect(structuredData).toBeDefined();
 
     const digest = await crypto.subtle.digest(

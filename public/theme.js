@@ -1,11 +1,10 @@
 (() => {
   const params = new URLSearchParams(window.location.search);
   const theme = params.get("theme") === "modern" ? "modern" : "original";
-  const stylesheet = document.createElement("link");
+  const stylesheet = document.getElementById("deck-theme");
 
   document.documentElement.dataset.theme = theme;
-  stylesheet.id = "deck-theme";
-  stylesheet.rel = "stylesheet";
-  stylesheet.href = theme === "modern" ? "/styles-modern.css" : "/styles.css";
-  document.head.append(stylesheet);
+  if (theme === "modern" && stylesheet) {
+    stylesheet.href = "/styles-modern.css?v=20260723.1";
+  }
 })();
