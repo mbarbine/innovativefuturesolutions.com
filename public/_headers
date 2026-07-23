@@ -6,3 +6,9 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   X-Permitted-Cross-Domain-Policies: none
+
+/
+  Cache-Control: no-store
+
+/index.html
+  Cache-Control: no-store
