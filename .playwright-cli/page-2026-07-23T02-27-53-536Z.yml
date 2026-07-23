@@ -1,0 +1,105 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "Innovative Future Solutions home" [ref=e3] [cursor=pointer]:
+      - /url: "#/1"
+      - generic [ref=e4]: IF
+      - generic [ref=e5]: Innovative Future Solutions
+    - generic "Live Cloudflare control status" [ref=e6]:
+      - generic [ref=e7]:
+        - text: Worker
+        - generic [ref=e9]: healthy
+      - generic [ref=e10]:
+        - text: TLS
+        - generic [ref=e12]: TLSv1.3
+      - generic [ref=e13]:
+        - text: WAF
+        - generic [ref=e15]: unknown
+      - generic [ref=e16]:
+        - text: Bots
+        - generic [ref=e18]: unknown
+      - generic [ref=e19]:
+        - text: Turnstile
+        - generic [ref=e21]: degraded
+      - generic [ref=e22]:
+        - text: APIs
+        - generic [ref=e24]: 8 routes
+    - generic [ref=e25]: IAD edge
+  - main "Application Security with Cloudflare slide deck" [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]: Guided edge control room · 10-step demo + architecture notes
+      - generic [ref=e31]:
+        - generic [ref=e32]:
+          - paragraph [ref=e33]: INNOVATIVE FUTURE SOLUTIONS PRESENTS
+          - heading [level=1] [ref=e34]:
+            - text: Secure the app.
+            - emphasis [ref=e35]: One layer at a time.
+          - paragraph [ref=e36]: A presenter-led walkthrough from deployment to edge enforcement, with a live proof point at every step.
+          - generic [ref=e37]:
+            - button "Begin with deployment 01 →" [ref=e38] [cursor=pointer]
+            - button "Run live preflight" [ref=e39] [cursor=pointer]
+            - link "Inspect the API contract" [ref=e40] [cursor=pointer]:
+              - /url: /openapi.yaml
+          - generic [ref=e41]:
+            - generic [ref=e43]: Live evidence is ready to inspect
+            - generic [ref=e44]: Not yet run
+        - complementary "Ten-step demo runbook" [ref=e45]:
+          - generic [ref=e46]:
+            - generic [ref=e47]: DEMO RUNBOOK
+            - generic [ref=e48]: 10 STEPS + 3 NOTES
+          - list [ref=e49]:
+            - listitem [ref=e50]:
+              - generic [ref=e51]: 01—03
+              - generic [ref=e52]:
+                - strong [ref=e53]: Put it on the edge
+                - generic [ref=e54]: Deploy · domain · HTTPS
+              - generic [ref=e55]: SHIP
+            - listitem [ref=e56]:
+              - generic [ref=e57]: 04—06
+              - generic [ref=e58]:
+                - strong [ref=e59]: Stop and investigate
+                - generic [ref=e60]: WAF rule · live block · event
+              - generic [ref=e61]: BLOCK
+            - listitem [ref=e62]:
+              - generic [ref=e63]: 07—09
+              - generic [ref=e64]:
+                - strong [ref=e65]: Control automated traffic
+                - generic [ref=e66]: Bots · Turnstile · API inventory
+              - generic [ref=e67]: DECIDE
+            - listitem [ref=e68]:
+              - generic [ref=e69]: "10"
+              - generic [ref=e70]:
+                - strong [ref=e71]: Explain the architecture
+                - generic [ref=e72]: Why the edge changes the risk
+              - generic [ref=e73]: TEACH
+          - paragraph [ref=e74]: Finish the ten live security steps, then use the architecture notes to discuss state, async work, AI, and migration trade-offs.
+      - generic [ref=e75]:
+        - generic [ref=e76]: 01 Deploy
+        - generic [ref=e77]: 04 WAF
+        - generic [ref=e78]: 05 Live block
+        - generic [ref=e79]: 06 Event
+        - generic [ref=e80]: 08 Turnstile
+        - generic [ref=e81]: 09 APIs
+  - navigation "Slide navigation" [ref=e82]:
+    - button "Previous slide" [disabled] [ref=e83] [cursor=pointer]: ←
+    - generic "Jump to slide" [ref=e84]:
+      - 'button "Go to slide 1: Application Security" [ref=e85] [cursor=pointer]': "01"
+      - 'button "Go to slide 2: Deploy" [ref=e86] [cursor=pointer]': "02"
+      - 'button "Go to slide 3: Custom domain" [ref=e87] [cursor=pointer]': "03"
+      - 'button "Go to slide 4: HTTPS" [ref=e88] [cursor=pointer]': "04"
+      - 'button "Go to slide 5: WAF rule" [ref=e89] [cursor=pointer]': "05"
+      - 'button "Go to slide 6: Blocked request" [ref=e90] [cursor=pointer]': "06"
+      - 'button "Go to slide 7: Security Event" [ref=e91] [cursor=pointer]': "07"
+      - 'button "Go to slide 8: Bot protection" [ref=e92] [cursor=pointer]': "08"
+      - 'button "Go to slide 9: Turnstile" [ref=e93] [cursor=pointer]': "09"
+      - 'button "Go to slide 10: API Discovery" [ref=e94] [cursor=pointer]': "10"
+      - 'button "Go to slide 11: Edge architecture" [ref=e95] [cursor=pointer]': "11"
+      - 'button "Go to slide 12: State and storage" [ref=e96] [cursor=pointer]': "12"
+      - 'button "Go to slide 13: Async and AI platform" [ref=e97] [cursor=pointer]': "13"
+      - 'button "Go to slide 14: Cloudflare and regional serverless" [ref=e98] [cursor=pointer]': "14"
+    - button "Present 00:00" [ref=e99] [cursor=pointer]:
+      - generic [ref=e100]: Present
+      - generic [ref=e101]: 00:00
+    - generic [ref=e102]: 01 / 14
+    - button "Next slide" [ref=e103] [cursor=pointer]: →
+  - paragraph [ref=e104]: "Slide 1 of 14: Application Security"
+  - generic [ref=e105]: Use ← → to navigate
