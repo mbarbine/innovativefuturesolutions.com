@@ -64,6 +64,12 @@ The public evidence API includes:
 - `GET /api/demo/profile`
 - `POST /api/demo/login`
 - `GET /api/docs`
+- `GET|POST /api/mcp`
+- `GET /.well-known/mcp.json`
+- `GET /.well-known/agents.json`
+- `GET /rss.xml`
+
+The public deck also publishes a self-canonical URL, Open Graph and social-card metadata, linked Schema.org Organization/Person/WebSite/WebApplication entities, machine-readable freshness, explicit AI-crawler rules, and a dated XML sitemap. These surfaces are release-gated with the live AnswerReady rubric alongside the application tests.
 
 ## Deployment
 

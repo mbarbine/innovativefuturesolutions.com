@@ -355,6 +355,17 @@ paths:
         '200': { description: Turnstile accepted }
         '400': { description: Invalid request or Turnstile token }
         '503': { description: Turnstile is not configured }
+  /api/mcp:
+    get:
+      operationId: getMcpMetadata
+      summary: Return public MCP server metadata
+      responses:
+        '200': { description: MCP metadata }
+    post:
+      operationId: callMcp
+      summary: Call the public read-only MCP server
+      responses:
+        '200': { description: JSON-RPC response }
 `;
 
 const llms = `# Innovative Future Solutions — Application Security Demo
@@ -369,7 +380,11 @@ Public surfaces:
 - /api/demo/request-inspection — redacted edge execution context
 - /api/demo/profile — safe API Discovery traffic target
 - /api/demo/burst-control — isolated edge rate-limit proof target
+- /api/mcp — read-only MCP discovery and JSON-RPC endpoint
 - /openapi.yaml — API description
+- /.well-known/mcp.json — MCP discovery manifest
+- /.well-known/agents.json — public agent policy
+- /rss.xml — application-security update feed
 
 The /api/demo/login endpoint validates Cloudflare Turnstile tokens server-side and never creates a real user session.
 `;
@@ -447,6 +462,37 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
     });
   }
 
+  if (url.pathname === "/api/mcp" && method === "GET") {
+    return apiSuccess({
+      name: "innovative-future-solutions-security-demo",
+      protocolVersion: "2025-06-18",
+      endpoint: "https://innovativefuturesolutions.com/api/mcp",
+      capabilities: { tools: true },
+      tools: ["get_security_controls", "get_demo_preflight"],
+    });
+  }
+
+  if (url.pathname === "/api/mcp" && method === "POST") {
+    const payload = await request.json().catch(() => null) as { jsonrpc?: string; id?: string | number | null; method?: string } | null;
+    if (!payload || payload.jsonrpc !== "2.0" || !payload.method) {
+      return json({ jsonrpc: "2.0", id: payload?.id ?? null, error: { code: -32600, message: "Invalid Request" } }, 400);
+    }
+    const result = payload.method === "initialize"
+      ? { protocolVersion: "2025-06-18", capabilities: { tools: {} }, serverInfo: { name: "innovative-future-solutions-security-demo", version: APP_VERSION } }
+      : payload.method === "tools/list"
+        ? { tools: [
+            { name: "get_security_controls", description: "Return the public Cloudflare control snapshot", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
+            { name: "get_demo_preflight", description: "Return public demo readiness evidence", inputSchema: { type: "object", properties: {}, additionalProperties: false } },
+          ] }
+        : payload.method === "ping"
+          ? {}
+          : null;
+    if (result === null) {
+      return json({ jsonrpc: "2.0", id: payload.id ?? null, error: { code: -32601, message: "Method not found" } });
+    }
+    return json({ jsonrpc: "2.0", id: payload.id ?? null, result });
+  }
+
   if (url.pathname === "/openapi.yaml" && method === "GET") {
     return new Response(openapi, { headers: { "content-type": "application/yaml; charset=utf-8" } });
   }
@@ -459,20 +505,48 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
     return json({
       name: "Innovative Future Solutions Application Security Demo",
       canonical: "https://innovativefuturesolutions.com/",
-      documents: ["/llms.txt", "/llms-full.txt", "/openapi.yaml"],
+      documents: ["/llms.txt", "/llms-full.txt", "/openapi.yaml", "/.well-known/mcp.json", "/.well-known/agents.json", "/rss.xml"],
+    });
+  }
+
+  if (url.pathname === "/.well-known/mcp.json" && method === "GET") {
+    return json({
+      name: "innovative-future-solutions-security-demo",
+      description: "Read-only Cloudflare application-security demo evidence",
+      protocolVersion: "2025-06-18",
+      endpoint: "https://innovativefuturesolutions.com/api/mcp",
+      transport: "streamable-http",
+      capabilities: ["tools"],
+    });
+  }
+
+  if (url.pathname === "/.well-known/agents.json" && method === "GET") {
+    return json({
+      name: "Innovative Future Solutions Application Security Demo",
+      canonical: "https://innovativefuturesolutions.com/",
+      policy: "Public read-only discovery and synthetic demo evidence; no credentials, accounts, or sessions are exposed.",
+      allowed: ["read public documentation", "inspect synthetic control evidence", "call read-only MCP tools"],
+      prohibited: ["credential collection", "private data access", "state-changing automation"],
     });
   }
 
   if (url.pathname === "/robots.txt" && method === "GET") {
-    return new Response("User-agent: *\nAllow: /\nSitemap: https://innovativefuturesolutions.com/sitemap.xml\n", {
+    return new Response("User-agent: *\nAllow: /\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: OAI-SearchBot\nAllow: /\n\nSitemap: https://innovativefuturesolutions.com/sitemap.xml\n", {
       headers: { "content-type": "text/plain; charset=utf-8" },
     });
   }
 
   if (url.pathname === "/sitemap.xml" && method === "GET") {
     return new Response(
-      '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://innovativefuturesolutions.com/</loc></url></urlset>\n',
+      '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://innovativefuturesolutions.com/</loc><lastmod>2026-07-22</lastmod></url></urlset>\n',
       { headers: { "content-type": "application/xml; charset=utf-8" } },
+    );
+  }
+
+  if ((url.pathname === "/rss.xml" || url.pathname === "/atom.xml") && method === "GET") {
+    return new Response(
+      '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Innovative Future Solutions Application Security</title><link>https://innovativefuturesolutions.com/</link><description>Cloudflare application-security demo releases and evidence updates.</description><lastBuildDate>Wed, 22 Jul 2026 00:00:00 GMT</lastBuildDate><item><title>Guided Cloudflare canary demo</title><link>https://innovativefuturesolutions.com/#/10</link><guid isPermaLink="true">https://innovativefuturesolutions.com/#/10</guid><pubDate>Wed, 22 Jul 2026 00:00:00 GMT</pubDate><description>Added guided JSON graph handoffs for live security-control evidence.</description></item></channel></rss>\n',
+      { headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=3600" } },
     );
   }
 

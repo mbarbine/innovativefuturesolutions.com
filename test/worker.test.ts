@@ -138,6 +138,36 @@ describe("application security worker", () => {
     expect(text).not.toContain("192.0.2.10");
   });
 
+  it("publishes valid agent, MCP, feed, robots, and sitemap discovery surfaces", async () => {
+    const mcp = await handleRequest(new Request("https://innovativefuturesolutions.com/.well-known/mcp.json"), env());
+    const agents = await handleRequest(new Request("https://innovativefuturesolutions.com/.well-known/agents.json"), env());
+    const feed = await handleRequest(new Request("https://innovativefuturesolutions.com/rss.xml"), env());
+    const robots = await handleRequest(new Request("https://innovativefuturesolutions.com/robots.txt"), env());
+    const sitemap = await handleRequest(new Request("https://innovativefuturesolutions.com/sitemap.xml"), env());
+
+    expect(await mcp.json()).toMatchObject({ endpoint: "https://innovativefuturesolutions.com/api/mcp" });
+    expect(await agents.json()).toMatchObject({ canonical: "https://innovativefuturesolutions.com/" });
+    expect(feed.headers.get("content-type")).toContain("application/rss+xml");
+    expect(await feed.text()).toContain("<rss version=\"2.0\">");
+    expect(await robots.text()).toContain("User-agent: GPTBot\nAllow: /");
+    expect(await sitemap.text()).toContain("<lastmod>2026-07-22</lastmod>");
+  });
+
+  it("serves a minimal read-only MCP protocol surface", async () => {
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+      }),
+      env(),
+    );
+    const body = await response.json() as { result: { tools: Array<{ name: string }> } };
+
+    expect(response.status).toBe(200);
+    expect(body.result.tools.map((tool) => tool.name)).toEqual(["get_security_controls", "get_demo_preflight"]);
+  });
+
   it("returns a standard error for unknown API routes", async () => {
     const response = await handleRequest(
       new Request("https://innovativefuturesolutions.com/api/missing"),

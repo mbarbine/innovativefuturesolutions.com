@@ -12,6 +12,8 @@
       "/openapi.yaml",
       "/llms*.txt",
       "/llms-index.json",
+      "/rss.xml",
+      "/atom.xml",
       "/robots.txt",
       "/sitemap.xml",
       "/.well-known/*"
