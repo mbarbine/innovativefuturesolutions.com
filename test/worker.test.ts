@@ -65,6 +65,17 @@ describe("application security worker", () => {
     expect(response.headers.get("content-security-policy")).not.toContain("'unsafe-inline'");
   });
 
+  it("prevents the versioned deck shell from being served stale", async () => {
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/"),
+      env(),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("asset");
+    expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+
   it("rejects login attempts when Turnstile is not configured", async () => {
     const response = await handleRequest(
       new Request("https://innovativefuturesolutions.com/api/demo/login", {

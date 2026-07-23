@@ -571,7 +571,18 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
     return apiError("NOT_FOUND", "No API route matches this request.", 404);
   }
 
-  return env.ASSETS.fetch(request);
+  const assetResponse = await env.ASSETS.fetch(request);
+  if (method === "GET" && (url.pathname === "/" || url.pathname === "/index.html")) {
+    const headers = new Headers(assetResponse.headers);
+    headers.set("cache-control", "no-store");
+    return new Response(assetResponse.body, {
+      status: assetResponse.status,
+      statusText: assetResponse.statusText,
+      headers,
+    });
+  }
+
+  return assetResponse;
 }
 
 export async function handleRequest(request: Request, env: Env): Promise<Response> {
