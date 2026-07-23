@@ -34,10 +34,10 @@ const jsonHeaders = {
 const baseSecurityHeaders = {
   "content-security-policy": [
     "default-src 'self'",
-    "script-src 'self' https://challenges.cloudflare.com",
+    "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'sha256-gILah0Z4+U4aJOCk4sIE3/wMDrW7s1hxbyPuEpZd1OQ='",
     "style-src 'self'",
     "frame-src https://challenges.cloudflare.com",
-    "connect-src 'self' https://challenges.cloudflare.com",
+    "connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com",
     "img-src 'self' data:",
     "font-src 'self'",
     "object-src 'none'",
