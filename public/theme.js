@@ -5,6 +5,7 @@
 
   document.documentElement.dataset.theme = theme;
   if (theme === "modern" && stylesheet) {
-    stylesheet.href = "/styles-modern.css?v=20260723.1";
+    const version = new URL(stylesheet.href).search;
+    stylesheet.href = `/styles-modern.css${version}`;
   }
 })();
