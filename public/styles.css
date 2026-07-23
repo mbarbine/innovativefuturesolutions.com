@@ -342,6 +342,9 @@ pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
 .endpoint-list .post { color: #8ecbff; border: 1px solid rgba(142,203,255,.3); }
 .endpoint-list code { min-width: 0; overflow-wrap: anywhere; font-family: var(--mono); font-size: 9px; }
 .endpoint-list > div > span:last-child, .endpoint-list > button > span:last-child { color: var(--muted); font-size: 8px; text-align: right; }
+.api-viewer-link { display: block; margin: 0 16px 14px; padding: 9px 10px; color: var(--green); border: 1px solid rgba(183,255,101,.28); font-family: var(--mono); font-size: 9px; letter-spacing: .06em; text-align: center; text-decoration: none; transition: border-color 160ms ease, background 160ms ease; }
+.api-viewer-link:hover, .api-viewer-link:focus-visible { border-color: rgba(183,255,101,.72); background: rgba(183,255,101,.08); }
+.api-viewer-link[hidden] { display: none; }
 .api-console { margin-top: 9px; border: 1px solid var(--line); background: #040b08; }
 .api-console > div { min-height: 32px; padding: 0 12px; display: flex; justify-content: space-between; align-items: center; color: #66756c; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 8px; letter-spacing: .1em; }
 .api-console b { color: var(--green); }

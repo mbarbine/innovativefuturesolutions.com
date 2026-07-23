@@ -637,7 +637,7 @@ If the widget cannot load, show `/api/config` to prove the public site key is co
 
 “This inventory has eight declared operations. I can execute each public GET operation from the slide and see the HTTP status, Ray ID, and public-safe JSON. The request-inspection endpoint proves the Worker saw the hostname, path, protocol, TLS, and colo while intentionally excluding IP addresses, cookies, credentials, and bodies.”
 
-“The canary link sends the live `/api/security-controls` response into PlatPhorm JSON on Cloudflare. It opens directly in Graph view and highlights WAF, bot controls, managed API endpoints, and rate limiting as distinct paths. The graph is fetched from this Worker at presentation time; it is not a fabricated screenshot.”
+“The canary link sends the live `/api/security-controls` response into PlatPhorm JSON on Cloudflare. It opens a guided Graph view that steps through WAF, bot controls, managed API endpoints, and rate limiting, then returns directly to this slide. Every successful GET in the API explorer also exposes the same full-response handoff. The graph is fetched from this Worker at presentation time; it is not a fabricated screenshot.”
 
 “The burst-control route is deliberately isolated. A normal response returns 200 from the Worker. The rate-limiting rule counts requests by data-center location and client IP; after the threshold, the edge returns 429 for ten seconds. The exact number of 200s can vary because distributed counters may update with a short delay—the security proof is the transition from Worker JSON to an edge 429.”
 

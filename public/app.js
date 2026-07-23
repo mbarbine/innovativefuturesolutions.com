@@ -9,6 +9,8 @@ const presenterOutput = document.querySelector("#presenter-output");
 const preflightGrid = document.querySelector("#preflight-grid");
 const timerDisplays = [...document.querySelectorAll("#presenter-timer, [data-nav-timer]")];
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const JSON_VIEWER_ORIGIN = "https://json.innovativefuturesolutions.com";
+const DEMO_PUBLIC_ORIGIN = "https://innovativefuturesolutions.com";
 let current = 0;
 let touchStartX = null;
 let turnstileToken = "";
@@ -18,6 +20,24 @@ let timerElapsedMs = 0;
 let timerInterval = null;
 let pipelineRunId = 0;
 let burstRunId = 0;
+
+function createJsonViewerUrl(path, presentation = false) {
+  const source = new URL(path, DEMO_PUBLIC_ORIGIN);
+  const viewer = new URL(JSON_VIEWER_ORIGIN);
+  viewer.searchParams.set("url", source.href);
+  viewer.searchParams.set("v", "graph");
+  if (presentation) viewer.searchParams.set("present", "security");
+  return viewer.href;
+}
+
+function initializeJsonViewerLinks() {
+  document.querySelectorAll("[data-json-viewer-path]").forEach((link) => {
+    link.href = createJsonViewerUrl(
+      link.dataset.jsonViewerPath,
+      link.dataset.jsonPresentation === "security",
+    );
+  });
+}
 
 const chapterButtons = slides.map((slide, index) => {
   const button = document.createElement("button");
@@ -390,7 +410,9 @@ async function submitLogin(event) {
 async function runApiExplorer(path) {
   const output = document.querySelector("[data-api-output]");
   const status = document.querySelector("[data-api-status]");
+  const viewer = document.querySelector("[data-api-viewer]");
   status.textContent = "WAIT";
+  viewer.hidden = true;
   output.textContent = `GET ${path}\n\nSending request through Cloudflare's edge…`;
   try {
     const { response, body } = await getJson(path, { cache: "no-store" });
@@ -398,6 +420,8 @@ async function runApiExplorer(path) {
     status.textContent = String(response.status);
     const rendered = JSON.stringify(body, null, 2);
     output.textContent = `STATUS ${response.status}\nRAY    ${ray}\n\n${rendered.slice(0, 2200)}${rendered.length > 2200 ? "\n… response truncated for the slide" : ""}`;
+    viewer.href = createJsonViewerUrl(path, path === "/api/security-controls");
+    viewer.hidden = false;
   } catch (error) {
     status.textContent = "ERROR";
     output.textContent = error instanceof Error ? error.message : "The API request failed.";
@@ -545,6 +569,7 @@ function resetDemo() {
   document.querySelector("[data-pipeline-output]").innerHTML = "<strong>Bindings are the connective tissue:</strong> the Worker receives platform capabilities through its environment instead of exposing service credentials to browser code.";
   document.querySelector("[data-api-output]").textContent = "Select a GET operation to inspect its public-safe response.";
   document.querySelector("[data-api-status]").textContent = "READY";
+  document.querySelector("[data-api-viewer]").hidden = true;
   document.querySelector("[data-burst-output]").textContent = "The first responses should reach the Worker; the edge then returns 429.";
   if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
   showSlide(0);
@@ -631,6 +656,7 @@ window.addEventListener("hashchange", () => showSlide(routeNumber(), false));
 document.querySelector("#demo-login").addEventListener("submit", submitLogin);
 
 showSlide(routeNumber(), false);
+initializeJsonViewerLinks();
 restoreEvent();
 loadHealth();
 loadControls();
