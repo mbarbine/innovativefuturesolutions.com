@@ -86,7 +86,11 @@ function showSlide(index, updateHash = true) {
   if (chapterNav.scrollWidth > chapterNav.clientWidth) {
     chapterNav.scrollTo({ left: activeChapter.offsetLeft - chapterNav.clientWidth / 2, behavior: reducedMotion ? "auto" : "smooth" });
   }
-  if (updateHash) history.replaceState(null, "", `#/${current + 1}`);
+  if (updateHash) {
+    const nextUrl = new URL(window.location.href);
+    nextUrl.hash = `/${current + 1}`;
+    history.replaceState(null, "", nextUrl);
+  }
 }
 
 function setText(selector, value) {

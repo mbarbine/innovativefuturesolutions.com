@@ -30,6 +30,11 @@ Three architecture notes follow the live demo:
 - Open public-safe Worker JSON responses through the live Cloudflare canary, including a guided `/api/security-controls` graph with WAF, bot, API, and rate-limit focus steps.
 - Download the generated [speaker notes](https://innovativefuturesolutions.com/downloads/cloudflare-application-security-speaker-notes.docx) from the command center.
 
+The original green presentation is the default. The archived orange visual treatment
+is available behind the stateless `?theme=modern` feature flag, for example
+`https://innovativefuturesolutions.com/?theme=modern#/10`. Both themes use the same
+HTML, application logic, APIs, and security controls.
+
 The storage, async/AI, and migration interactions are labeled architecture simulations. They explain selection criteria and trade-offs without claiming that optional platform services are provisioned by this demo.
 
 ## Architecture

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { handleRequest, type Env } from "../src/index";
 import indexHtml from "../public/index.html?raw";
+import themeLoader from "../public/theme.js?raw";
 
 function env(overrides: Partial<Env> = {}): Env {
   return {
@@ -22,6 +23,10 @@ describe("application security worker", () => {
 
     expect(indexHtml).not.toContain("fonts.googleapis.com");
     expect(indexHtml).not.toContain("fonts.gstatic.com");
+    expect(indexHtml).toContain('<script src="/theme.js"></script>');
+    expect(themeLoader).toContain('params.get("theme") === "modern"');
+    expect(themeLoader).toContain('"/styles-modern.css"');
+    expect(themeLoader).toContain('"/styles.css"');
     expect(structuredData).toBeDefined();
 
     const digest = await crypto.subtle.digest(
