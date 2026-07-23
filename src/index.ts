@@ -34,7 +34,7 @@ const jsonHeaders = {
 const baseSecurityHeaders = {
   "content-security-policy": [
     "default-src 'self'",
-    "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'sha256-gILah0Z4+U4aJOCk4sIE3/wMDrW7s1hxbyPuEpZd1OQ='",
+    "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'sha256-nHTw4hvUfWu8zi0PApob3Z4kQVMpo1fdeRlvItmKS1U='",
     "style-src 'self'",
     "frame-src https://challenges.cloudflare.com",
     "connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com",

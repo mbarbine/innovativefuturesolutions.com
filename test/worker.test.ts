@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { handleRequest, type Env } from "../src/index";
+import indexHtml from "../public/index.html?raw";
 
 function env(overrides: Partial<Env> = {}): Env {
   return {
@@ -14,6 +15,28 @@ function env(overrides: Partial<Env> = {}): Env {
 }
 
 describe("application security worker", () => {
+  it("keeps static page dependencies and structured data compatible with the CSP", async () => {
+    const structuredData = indexHtml.match(
+      /<script type="application\/ld\+json">([\s\S]*?)<\/script>/,
+    )?.[1];
+
+    expect(indexHtml).not.toContain("fonts.googleapis.com");
+    expect(indexHtml).not.toContain("fonts.gstatic.com");
+    expect(structuredData).toBeDefined();
+
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(structuredData),
+    );
+    const hash = `sha256-${btoa(String.fromCharCode(...new Uint8Array(digest)))}`;
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/health"),
+      env(),
+    );
+
+    expect(response.headers.get("content-security-policy")).toContain(`'${hash}'`);
+  });
+
   it("returns a standard health envelope and security headers", async () => {
     const response = await handleRequest(
       new Request("https://innovativefuturesolutions.com/api/health"),
