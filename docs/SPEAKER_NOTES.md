@@ -978,3 +978,51 @@ Never convert a configured snapshot into a claim about a specific request. Use r
 - Workers AI: https://developers.cloudflare.com/workers-ai/
 - Vectorize: https://developers.cloudflare.com/vectorize/
 - Browser Run: https://developers.cloudflare.com/browser-run/get-started/
+
+---
+
+# Impact use case — secure browser multiplayer on one Cloudflare perimeter
+
+**Customer scenario:** A startup game studio has migrated a browser-native multiplayer arena from a split AWS, Redis and Vercel-style path to Cloudflare. It expects future interoperability with a high-scale external online ecosystem such as GTA6 Online, but makes no claim of Rockstar affiliation, endorsement, API access or current integration.
+
+**Customer outcome:** Preserve simulation and graphics fidelity while reducing release-mixing, asset-pop-in, room divergence, attack surface and cross-provider latency. Every control must improve or leave gameplay unchanged; nothing optional may enter the authoritative input, tick, hit, pickup or score path.
+
+## What is live and proven
+
+- Cloudflare authoritative DNS, anycast TLS, DDoS protection and WAF protect the canonical game hostname.
+- Workers Assets serves the application shell; the dedicated multiplayer Worker routes same-origin WebSockets to one SQLite Durable Object per room.
+- R2 serves deterministic runtime releases with byte ranges, SHA-256 ETags and immutable edge caching. Workers KV holds only the verified current-release pointer; it never owns match state.
+- D1 stores results, moderation and stewardship receipts. Cron, Queues and a DLQ maintain persistent joinable-room definitions asynchronously and never run the game loop.
+- Workers AI is reachable only through a private service binding for bounded post-match coaching.
+- Web Analytics RUM and Log Explorer provide passive player and edge evidence without delaying gameplay.
+- The final live gates passed: 60/60 OWASP-aligned probes, 1/1 two-human state convergence, 2/2 mobile landscape engines, 3/3 regional HTTPS/TLS checks, and a six-minute production tournament with seven bots, 70 bot-on-bot attacks and 11 frags.
+- The deterministic release contract passed 264 suites and 1,434 tests; the integrity scan covered 304 test files.
+
+## Before and after performance evidence
+
+Seven matched samples compare the legacy hostname with the canonical Cloudflare hostname. Home-page median TTFB improved from 165.08 ms to 150.27 ms, an 8.97% reduction. Median total time improved from 188.98 ms to 175.98 ms, a 6.88% reduction. The exact 2,789,505-byte PK3 asset improved from 123.19 ms to 119.70 ms median TTFB and from 404.54 ms to 383.76 ms median total time; measured throughput increased 5.42%.
+
+Do not overstate the result. One home-page p95 connection outlier remains, and the population RUM window is still accumulating. Deep health endpoint timings are control-plane diagnostics, not gameplay latency.
+
+## Architecture boundary to narrate
+
+![QuakeCraft next-release full-stack Cloudflare architecture. The authoritative WebSocket room path is isolated from assets, durable records, AI/search, analytics, media and studio-only Zero Trust controls.](../platphorm-quake-cloudflare/docs/cloudflare-fullstack-game-next-release.png)
+
+The hot path is deliberately small: browser, edge security/delivery, the dedicated multiplayer Worker and one room Durable Object. R2, KV, D1, Queues, Workers AI, Vectorize, AI Search, media services and Zero Trust policy cannot determine a hit, pickup, movement state, timer, arena revision or winner.
+
+## Next-release gates, not deployment claims
+
+- Vectorize and AI Search are approved only for a public-safe, source-cited corpus of maps, rules, release notes and runbooks. They are not provisioned until corpus, citation and privacy tests pass.
+- Realtime SFU and TURN are limited to explicit opt-in voice. Match identity and room authority remain in Durable Objects even if media fails.
+- Pipelines, R2 Data Catalog and Stream remain asynchronous analytics, spectator or replay planes.
+- Cloudflare One DNS policies protect enrolled studio and CI device egress only. They do not replace public authoritative DNS, CDN routing or player-path controls and require a canary plus policy-precedence audit before enablement.
+
+## Presenter close
+
+“This case study shows why layered application security is an architecture decision, not a collection of checkboxes. The security perimeter, application delivery and room authority are co-located at the Cloudflare edge, while assets, records, AI, analytics and media remain isolated by failure model. The proof is not the diagram: it is the passing live multiplayer, mobile, security, asset-integrity and deterministic release evidence behind it.”
+
+- Full-stack serverless reference architecture: https://developers.cloudflare.com/reference-architecture/diagrams/serverless/fullstack-application/
+- Workers static assets: https://developers.cloudflare.com/workers/static-assets/
+- R2 Data Catalog getting started: https://developers.cloudflare.com/r2/data-catalog/get-started/
+- Cloudflare Log Explorer fields: https://developers.cloudflare.com/logs/logpush/logpush-job/datasets/zone/http_requests/
+- Cloudflare One DNS policies: https://developers.cloudflare.com/cloudflare-one/traffic-policies/dns-policies/

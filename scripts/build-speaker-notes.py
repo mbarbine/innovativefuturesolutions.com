@@ -436,6 +436,29 @@ def parse_markdown(
             current_list_kind = None
             continue
 
+        image_match = re.match(r"^!\[(.+)\]\((.+)\)$", line)
+        if image_match:
+            image_path = (ROOT / image_match.group(2)).resolve()
+            if not image_path.is_file():
+                raise FileNotFoundError(f"Referenced image does not exist: {image_path}")
+            doc.add_picture(str(image_path), width=Inches(6.4))
+            picture = doc.paragraphs[-1]
+            picture.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            picture.paragraph_format.space_before = Pt(6)
+            picture.paragraph_format.space_after = Pt(4)
+            caption = doc.add_paragraph()
+            caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            caption.paragraph_format.space_after = Pt(9)
+            set_run_font(
+                caption.add_run(image_match.group(1)),
+                size=8.5,
+                color=MUTED,
+                italic=True,
+            )
+            current_list_kind = None
+            current_num_id = None
+            continue
+
         numbered = re.match(r"^\d+\.\s+(.*)$", line)
         bullet = re.match(r"^-\s+(.*)$", line)
         if numbered or bullet:
