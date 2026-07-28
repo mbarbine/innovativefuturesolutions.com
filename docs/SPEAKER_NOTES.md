@@ -996,7 +996,8 @@ Never convert a configured snapshot into a claim about a specific request. Use r
 - Workers AI is reachable only through a private service binding for bounded post-match coaching.
 - Web Analytics RUM and Log Explorer provide passive player and edge evidence without delaying gameplay.
 - The final live gates passed: 60/60 OWASP-aligned probes, 1/1 two-human state convergence, 2/2 mobile landscape engines, 3/3 regional HTTPS/TLS checks, and a six-minute production tournament with seven bots, 70 bot-on-bot attacks and 11 frags.
-- The deterministic release contract passed 264 suites and 1,434 tests; the integrity scan covered 304 test files.
+- A 16-client production WebSocket soak delivered and acknowledged all 19,200 gameplay events with no errors or closes; observed round-trip latency was 43.8 ms p50 and 44.6 ms p95 from the test location.
+- The deterministic release contract passed 282 suites and 1,545 tests. A 22-scenario physical-Chrome matrix covered eleven maps, three mobile profiles, five match modes, two quality extremes and third-person view; all scenarios passed at approximately 107–121 average FPS.
 
 ## Before and after performance evidence
 
@@ -1004,11 +1005,19 @@ Seven matched samples compare the legacy hostname with the canonical Cloudflare 
 
 Do not overstate the result. One home-page p95 connection outlier remains, and the population RUM window is still accumulating. Deep health endpoint timings are control-plane diagnostics, not gameplay latency.
 
+The final same-client gameplay comparison is also intentionally asymmetric:
+Cloudflare Blocklands CTF reached the real scene at 120.17 FPS average,
+107.10 FPS 1% low and 9.1 ms p95 with no failures. The legacy host did not
+reach scene-ready and reported two renderer errors. Missing legacy FPS remains
+unavailable; it is not converted into an improvement claim.
+
 ## Architecture boundary to narrate
 
-![QuakeCraft next-release full-stack Cloudflare architecture. The authoritative WebSocket room path is isolated from assets, durable records, AI/search, analytics, media and studio-only Zero Trust controls.](../platphorm-quake-cloudflare/docs/cloudflare-fullstack-game-next-release.png)
+![QuakeCraft complete Cloudflare runtime and evidence architecture. The authoritative WebSocket room path is isolated from assets, durable records, AI/search, analytics, media, release controls and benchmark evidence.](../platphorm-quake-cloudflare/docs/cloudflare-game-complete-runtime-and-benchmark.png)
 
 The hot path is deliberately small: browser, edge security/delivery, the dedicated multiplayer Worker and one room Durable Object. R2, KV, D1, Queues, Workers AI, Vectorize, AI Search, media services and Zero Trust policy cannot determine a hit, pickup, movement state, timer, arena revision or winner.
+
+Workers KV is intentionally limited to the verified immutable asset-release pointer and other versioned, stale-safe defaults. Room settings, locks, counters, online state and per-tick bot decisions belong to the room Durable Object. Flagship is a future server-side-only option for reversible, non-authoritative visual, UX and telemetry rollouts; a browser provider would expose its API token and is therefore excluded. Containers are also excluded from gameplay and deployment because no current workload requires them and the account entitlement is not present.
 
 ## Next-release gates, not deployment claims
 
