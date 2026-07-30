@@ -1,36 +1,36 @@
 # Innovative Future Solutions — Application Security at the Edge
 
-An interactive 20-slide application-security working session deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com). Version 1.4.0 leads with qualification and Cloudflare's network differentiation, verifies zone → DNS → SSL/TLS before product controls, keeps plan/entitlement/configuration/evidence states separate, and closes with a two-week POC.
+An interactive 20-slide application-security working session deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com). Version 1.4.2 leads with qualification and Cloudflare's network differentiation, correlates each main-slide claim to a live action or exact dashboard destination, keeps plan/entitlement/configuration/evidence states separate, and closes with a two-week POC.
 
 The guided walkthrough covers:
 
 1. Introductions and quick qualification
 2. Cloudflare's global network and single-pass control point
-3. Approachable DNS, proxy, and TLS onboarding
+3. Three live applications sharing one Cloudflare edge operating model
 4. Public AppSec plus private Access and Tunnel architecture
 5. Security Analytics, Security Events, WAF, rate limiting, bots, API Shield, and optional Workers
 6. A two-week POC and direct design-session ask
-7. Five appendix slides for evidence, TLS truth, product state, Q&A discipline, and official sources
+7. Five customer-safe appendix slides for evidence, TLS truth, product state, POC boundaries, and official sources
 
 ## Presenter workflow
 
 - Select **Present** or press `P` to open the command center.
 - Run preflight to check the Worker, hostname, HTTPS/TLS, WAF, bot control, Turnstile, and API inventory from public-safe live evidence.
-- Use `T` for the talk timer, `F` for fullscreen, and the arrow keys to navigate.
-- Inspect public-safe Worker JSON at `/api/security-controls`; the deck does not generate attack or burst traffic.
-- Generate deterministic WAF and rate-limit evidence only with the private operator helper before the interview.
-- Download the generated [speaker notes](https://innovativefuturesolutions.com/downloads/cloudflare-application-security-speaker-notes.docx) from the command center.
+- Use `T` for the talk timer, `F` for native fullscreen with a CSS presentation fallback, and the arrow keys to navigate.
+- Use [tools/cloudflare-appsec-final-sidecar.html](tools/cloudflare-appsec-final-sidecar.html) on the presenter-only screen for slide-matched cues, dashboard filters, customer questions, checkpoints, a 30-minute timer, and locally saved discovery notes.
+- Inspect public-safe Worker JSON at `/api/security-controls`; live WAF and rate actions are bounded to dedicated demo paths.
+- The private sidecar and speaker notes are not included in the Worker's public asset directory.
 
-The original green presentation is the default. The archived orange visual treatment
-is available behind the stateless `?theme=modern` feature flag, for example
-`https://innovativefuturesolutions.com/?theme=modern#/10`. Both themes use the same
+The approved orange presentation is the default. The archived green visual treatment
+is available behind the stateless `?theme=original` feature flag, for example
+`https://innovativefuturesolutions.com/?theme=original#/10`. Both themes use the same
 HTML, application logic, APIs, and security controls.
 
 ## Architecture
 
 - `public/` contains the responsive, keyboard-, touch-, and numbered-rail-navigable slide deck.
 - `src/index.ts` serves public-safe API and discovery routes and performs Turnstile validation.
-- `docs/SPEAKER_NOTES.md` is the editable speaker-guide source; `scripts/build-speaker-notes.py` generates the downloadable DOCX.
+- `docs/SPEAKER_NOTES.md` is the editable speaker-guide source; `scripts/build-speaker-notes.py` generates a local-only DOCX under `docs/`.
 - Cloudflare WAF and bot controls execute before the Worker.
 - Turnstile's secret and deployment control metadata are Worker secrets, never repository files.
 

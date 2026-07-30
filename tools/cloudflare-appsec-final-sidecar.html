@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cloudflare AppSec — Final Private Sidecar</title>
+  <style>
+    :root { color-scheme: dark; --bg:#02050a; --panel:#08111b; --line:#233245; --ink:#f4f7fb; --muted:#a5b1c1; --orange:#ff7a1a; --blue:#66c8ff; --green:#93efb4; --red:#ff7e8b; }
+    * { box-sizing:border-box; }
+    html,body { width:100%; height:100%; margin:0; overflow:hidden; background:var(--bg); color:var(--ink); font-family:Inter,ui-sans-serif,system-ui,"Segoe UI",sans-serif; }
+    button,a { font:inherit; }
+    .app { height:100vh; display:grid; grid-template-rows:72px minmax(0,1fr) 34px; }
+    header { display:flex; gap:12px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); background:#06101a; }
+    header div:first-child { min-width:300px; }
+    header b,header small { display:block; }
+    header small { margin-top:3px; color:var(--muted); }
+    .status { flex:1; min-width:0; display:flex; gap:8px; }
+    .pill { padding:7px 10px; overflow:hidden; border:1px solid var(--line); border-radius:999px; color:var(--muted); text-overflow:ellipsis; white-space:nowrap; }
+    .pill.hot { color:#111; border-color:var(--orange); background:var(--orange); font-weight:800; }
+    .controls { display:flex; gap:7px; }
+    .timer { min-width:64px; align-self:center; color:var(--orange); font:800 16px ui-monospace,Consolas,monospace; text-align:center; }
+    button { padding:8px 11px; color:var(--ink); border:1px solid var(--line); border-radius:8px; background:#102033; cursor:pointer; }
+    button:hover,button:focus-visible { border-color:var(--blue); outline:none; }
+    main { min-height:0; padding:12px; display:grid; grid-template-columns:minmax(0,1.25fr) minmax(420px,.75fr); gap:12px; }
+    .card { min-height:0; border:1px solid var(--line); border-radius:14px; background:linear-gradient(180deg,#0b1724,#060d16); box-shadow:0 20px 50px rgba(0,0,0,.25); }
+    .say { padding:22px; overflow:auto; }
+    .label { color:var(--orange); font-size:11px; font-weight:900; letter-spacing:.13em; }
+    h1 { margin:7px 0 20px; font-size:31px; line-height:1.05; }
+    .say p { margin:0; font-size:clamp(23px,2.2vw,34px); line-height:1.36; }
+    .checkpoint { margin-top:22px; padding:14px; border-left:3px solid var(--green); background:#07131f; }
+    .checkpoint h2,.notes-label { margin:0 0 7px; color:var(--green); font-size:11px; letter-spacing:.11em; }
+    .checkpoint p { color:#d9e1eb; font-size:15px; line-height:1.4; }
+    .notes-label { display:block; margin-top:18px; color:var(--blue); }
+    textarea { width:100%; min-height:120px; resize:vertical; padding:12px; color:var(--ink); border:1px solid var(--line); border-radius:9px; background:#030a12; font:14px/1.4 ui-monospace,Consolas,monospace; }
+    .right { min-height:0; display:grid; grid-template-columns:1fr 1fr; gap:9px; overflow:auto; }
+    .cue { padding:13px; }
+    .cue h2 { margin:0 0 8px; color:var(--blue); font-size:11px; letter-spacing:.09em; }
+    .cue p,.cue li { margin:0; color:#d9e1eb; font-size:14px; line-height:1.38; }
+    .cue ul { margin:0; padding-left:18px; }
+    .cue.open h2 { color:var(--orange); }
+    .cue.ask h2 { color:var(--green); }
+    .cue.recover h2 { color:var(--red); }
+    .cue a { color:#8ed7ff; text-decoration:none; overflow-wrap:anywhere; }
+    dialog { width:min(860px,92vw); max-height:82vh; color:var(--ink); border:1px solid var(--line); border-radius:16px; background:#06101a; box-shadow:0 28px 90px #000; }
+    dialog::backdrop { background:rgba(0,0,0,.74); }
+    .dialog-head { display:flex; justify-content:space-between; gap:12px; align-items:center; }
+    .dialog-head h2 { margin:0; }
+    #qaSearch { width:100%; margin:14px 0; padding:11px; color:var(--ink); border:1px solid var(--line); border-radius:8px; background:#02070d; }
+    #qaResults { display:grid; gap:9px; }
+    .qa { padding:12px; border:1px solid var(--line); border-radius:10px; background:#091522; }
+    .qa b { color:var(--orange); }
+    .qa p { margin:6px 0 0; color:#d9e1eb; line-height:1.45; }
+    footer { display:flex; align-items:center; gap:12px; padding:0 14px; color:var(--muted); border-top:1px solid var(--line); font-size:12px; }
+    .progress { flex:1; height:5px; overflow:hidden; border-radius:9px; background:#142237; }
+    .progress i { display:block; height:100%; background:var(--orange); }
+    @media (max-width:1000px) { main { grid-template-columns:1fr; } .right { display:none; } header div:first-child { min-width:0; } .status { display:none; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div><b>Cloudflare AppSec — Live Sidecar</b><small>Correlate every claim to an action, request, or dashboard state</small></div>
+      <div class="status"><span class="pill hot" id="section"></span><span class="pill" id="slide"></span><span class="pill" id="title"></span></div>
+      <div class="controls"><span class="timer" id="timer">30:00</span><button id="timerToggle">Start timer</button><button id="qaToggle">Q&amp;A</button><button id="prev">←</button><button id="next">Next →</button></div>
+    </header>
+    <main>
+      <section class="card say">
+        <span class="label">SAY</span>
+        <h1 id="heading"></h1>
+        <p id="say"></p>
+        <div class="checkpoint"><h2>CHECKPOINT</h2><p id="checkpoint"></p></div>
+        <label class="notes-label" for="discoveryNotes">DISCOVERY NOTES · SAVED LOCALLY</label>
+        <textarea id="discoveryNotes" placeholder="Capture customer language, owners, baseline changes, and follow-up items."></textarea>
+      </section>
+      <aside class="right">
+        <section class="card cue"><h2>DO NOW</h2><ul id="doNow"></ul></section>
+        <section class="card cue"><h2>CLICK IN DECK</h2><p id="clickInDeck"></p></section>
+        <section class="card cue open"><h2>OPEN IN CLOUDFLARE</h2><p id="openInCloudflare"></p></section>
+        <section class="card cue"><h2>SEARCH / FILTER TERMS</h2><p id="searchTerms"></p></section>
+        <section class="card cue ask"><h2>ASK THE CUSTOMER</h2><p id="askCustomer"></p></section>
+        <section class="card cue recover"><h2>RECOVER IF IT FAILS</h2><p id="recover"></p></section>
+      </aside>
+    </main>
+    <footer><div class="progress"><i id="progress"></i></div><span id="count"></span><span>←/→ cues · Home/End · F browser presentation</span></footer>
+  </div>
+  <dialog id="qaDialog">
+    <div class="dialog-head"><h2>Searchable customer Q&amp;A</h2><button id="qaClose">Close</button></div>
+    <input id="qaSearch" type="search" placeholder="Search WAF, TLS, bots, API, rollback, entitlement…" />
+    <div id="qaResults"></div>
+  </dialog>
+  <script>
+    const account = "fd647616bd2ce32ee74a82221b64d9ac";
+    const zone = "innovativefuturesolutions.com";
+    const accountDash = `https://dash.cloudflare.com/${account}`;
+    const dash = `https://dash.cloudflare.com/${account}/${zone}`;
+    const oneHome = "https://dash.cloudflare.com/one/";
+    const one = `${accountDash}/one`;
+    const workerEvents = `${accountDash}/workers/services/view/innovative-future-solutions-security-demo/production/observability/events`;
+    const quakeEvents = `${accountDash}/workers/services/view/platphorm-quake-room-state/production/observability/events`;
+    const cues = [
+      {
+        section:"OPEN", slide:"01", title:"Application Security",
+        say:"For this proof I onboarded three application shapes: this Worker-backed AppSec lab, a supporting JSON evidence viewer, and a browser-based multiplayer FPS. The FPS proves practical platform breadth; it is not the center of the AppSec story.",
+        doNow:["Run readiness before leaving the opening slide.","Keep JSON and Quake to one sentence each."],
+        click:"Run readiness check · Open zone overview · Open Worker observability",
+        open:[["Zone Overview",dash],["Worker events",workerEvents]],
+        search:"Worker name · latest request timestamp · status",
+        ask:"Does a proof centered on one critical public request path match the outcome you want?",
+        recover:"If readiness is partial, name the exact check and continue with the slide. Do not turn a snapshot into request evidence."
+      },
+      {
+        section:"DISCOVERY", slide:"02", title:"Introductions",
+        say:"This is a role-play customer scenario, not a claim about your environment. We are testing whether Cloudflare can reduce exposure, preserve the agreed customer journey, and make request evidence faster to use.",
+        doNow:["State that the scenario is illustrative.","Invite interruption."],
+        click:"Open production deck · Open Security Traffic",
+        open:[["Security Traffic",`${dash}/security/analytics/traffic`]],
+        search:"Host · path · status · time window",
+        ask:"Which public web, API, or real-time journey carries the highest business consequence?",
+        recover:"If discovery is thin, use the labeled scenario and promise to replace it during POC design."
+      },
+      {
+        section:"DISCOVERY", slide:"03", title:"Quick qualification",
+        say:"I need the critical journey, the current operating pain, and the evidence that earns expansion. I will adapt control owners, cost, success metric, and rollback requirement from your answers.",
+        doNow:["Ask one question at a time.","Capture the customer’s words."],
+        click:"No live action; stay on the slide.",
+        open:[],
+        search:"None",
+        ask:"What evidence would make a two-week proof credible enough to expand?",
+        recover:"Do not show presumed answers as customer facts."
+      },
+      {
+        section:"BUSINESS CASE", slide:"04", title:"Business impact",
+        say:"This is an illustrative role-play baseline: 18 percent unwanted automation at peak, two customer-visible slowdowns per month, 45 minutes to correlate evidence, and three to five days for a policy change. The POC replaces every number with customer-approved data.",
+        doNow:["Point to the assumption label.","Use the customer’s discovery language once."],
+        click:"Open Events · Open Traffic",
+        open:[["Security Events",`${dash}/security/analytics/events`],["Security Traffic",`${dash}/security/analytics/traffic`]],
+        search:"Same time window · host · path · action",
+        ask:"Which of these measures matters, and which should we replace?",
+        checkpoint:"Confirm which baseline and target measures the customer wants to replace before discussing a POC.",
+        recover:"Never present the illustrative 18 percent, two-per-month, 45-minute, or three-to-five-day figures as achieved customer results."
+      },
+      {
+        section:"OVERVIEW", slide:"05", title:"Why Cloudflare",
+        say:"Cloudflare combines global reach, single-pass inspection, origin-independent policy, and a shared evidence path. The bottom line is one edge operating model rather than another security hop.",
+        doNow:["Use the bottom-line strip.","Open only the account view relevant to the next claim."],
+        click:"Account Home · Zone Overview · Security Events",
+        open:[["Account Home",accountDash],["Zone Overview",dash],["Security Events",`${dash}/security/analytics/events`]],
+        search:"Account · zone · current request evidence",
+        ask:"Does this origin-independent control point fit the environments you operate?",
+        recover:"A menu item does not prove entitlement. State only what the current page shows."
+      },
+      {
+        section:"LIVE APPS", slide:"06", title:"Three applications",
+        say:"The AppSec canary is the primary proof. The JSON viewer is a separate supporting application for public-safe response review. Quake is a full-stack browser FPS migrated in under two days; that is bounded migration evidence, not a universal performance claim.",
+        doNow:["Open the AppSec canary first.","Use JSON for the API handoff and Quake only for bounded platform breadth."],
+        click:"Public app · Worker observability · Security Events · JSON viewer/project · Cloudflare copy · Room observability · Legacy baseline",
+        open:[["AppSec canary","https://innovativefuturesolutions.com"],["AppSec Worker events",workerEvents],["JSON viewer","https://json.innovativefuturesolutions.com"],["JSON project",`${accountDash}/workers/services/view/platphorm-json-canary/production`],["Workers & Pages fallback",`${accountDash}/workers-and-pages`],["Quake Cloudflare copy","https://quake.innovativefuturesolutions.com"],["Quake room observability",quakeEvents],["Quake legacy baseline","https://quake.platphormnews.com"]],
+        search:"Worker name · deployment · latest request · application hostname",
+        ask:"Which of these workload shapes is closest to the representative customer path?",
+        checkpoint:"Keep the story anchored on the AppSec canary; JSON and Quake are supporting evidence.",
+        recover:"If a direct JSON project route is unavailable, use Workers & Pages and search for the project. If Quake fails, stay on the AppSec proof."
+      },
+      {
+        section:"ARCHITECTURE", slide:"07", title:"Target architecture",
+        say:"Keep the customer path available and enforce at the edge. Do not rely on obscurity for admin or preview paths; protect them with Access and, where appropriate, Tunnel.",
+        doNow:["Keep this to one architecture bridge.","Do not claim a deployed Access policy or healthy Tunnel unless visible."],
+        click:"Open Access applications · Open Tunnels/connectors",
+        open:[["Access applications",`${one}/access/apps`],["Tunnels/connectors",`${one}/networks/connectors`]],
+        search:"Application name · hostname · connector health",
+        ask:"Which admin, preview, partner, or internal paths should stop being public?",
+        recover:"If Zero Trust is unconfigured, make it a POC workstream and move on."
+      },
+      {
+        section:"FOUNDATION", slide:"08", title:"DNS TLS and Worker context",
+        say:"Verify the front door in sequence: zone and DNS establish the request path, SSL/TLS and Edge Certificates establish managed visitor TLS, and Worker observability plus the public health response establish the deployed runtime.",
+        doNow:["Open DNS before SSL/TLS.","End on Worker observability and a fresh public health response."],
+        click:"Zone overview · DNS records · SSL/TLS overview · Edge certificates · Worker observability",
+        open:[["Zone Overview",dash],["DNS",`${dash}/dns/records`],["SSL/TLS",`${dash}/ssl-tls`],["Edge Certificates",`${dash}/ssl-tls/edge-certificates`],["Worker events",workerEvents]],
+        search:"Apex record · proxied · active certificate · latest Worker request",
+        ask:"Who owns DNS, TLS, application routing, and rollback today?",
+        recover:"This Worker Custom Domain has no conventional second web-origin TLS hop. Do not narrate an origin certificate that is not part of this route."
+      },
+      {
+        section:"EVIDENCE", slide:"09", title:"Traffic and Security Events",
+        say:"Traffic describes the broad request population. Events explains requests that triggered a security decision. For a block I correlate status, timestamp, path, action, rule, and Ray ID.",
+        doNow:["Use matching time windows.","Keep the deck in place when opening tabs."],
+        click:"Open Security Traffic · Open Security Events",
+        open:[["Traffic",`${dash}/security/analytics/traffic`],["Events",`${dash}/security/analytics/events`]],
+        search:"Host · path · action · rule · Ray ID · timestamp",
+        ask:"Who needs this evidence and how quickly must they find it?",
+        recover:"Sampled event views may not show every request. Say that plainly."
+      },
+      {
+        section:"WAF PROOF", slide:"10", title:"Rules and enforcement",
+        say:"Configuration proves intent. A fresh request proves enforcement. The Security Event explains why Cloudflare acted.",
+        doNow:["Run safe request before Send XSS probe.","Open Events only after the probe records a Ray ID."],
+        click:"Run safe request · Send XSS probe · Open Managed Rules · Open Custom Rules · Open Security Events",
+        open:[["Managed Rules",`${dash}/security/waf/managed-rules`],["Custom Rules",`${dash}/security/waf/custom-rules`],["Security Events",`${dash}/security/analytics/events`]],
+        search:"/attack-lab · attack=xss · Block · Ray ID · current timestamp",
+        ask:"Is this rule scope narrow enough for the agreed journey?",
+        recover:"If the probe is not 403, say the configured rule did not produce expected evidence. Preserve the request; do not call it enforced."
+      },
+      {
+        section:"RATE PROOF", slide:"11", title:"Abuse controls",
+        say:"The illustrative baseline is 18 percent unwanted automation at peak. The POC target is at least 20 percent fewer abusive requests reaching application code without degrading the agreed customer journey. The live burst is bounded to one isolated path.",
+        doNow:["Confirm the dashboard rule targets /api/demo/burst-control.","Run one bounded burst, then check Events."],
+        click:"Run controlled burst · Open Rate Limiting · Open Bots · Open Quake room observability",
+        open:[["Rate Limiting",`${dash}/security/waf/rate-limiting-rules`],["Bots",`${dash}/security/bots`],["Quake room observability",quakeEvents]],
+        search:"/api/demo/burst-control · 429 · threshold · period · action",
+        ask:"What legitimate burst behavior must a production policy preserve?",
+        recover:"If no 429 appears, call out counter propagation or scope mismatch. Do not convert repeated 200s into enforcement proof."
+      },
+      {
+        section:"API", slide:"12", title:"API controls",
+        say:"This JSON viewer is a helper app, not a Cloudflare product. It renders public-safe control and OpenAPI payloads so we can review live API state without exposing secrets.",
+        doNow:["Run one API GET in the deck.","Open that response in the JSON viewer."],
+        click:"API endpoints · Worker observability · OpenAPI schema · JSON viewer · JSON project · six GET operation buttons",
+        open:[["API endpoints",`${accountDash}/web-assets`],["Worker observability",workerEvents],["OpenAPI schema","https://innovativefuturesolutions.com/openapi.yaml"],["JSON viewer","https://json.innovativefuturesolutions.com"],["JSON project",`${accountDash}/workers/services/view/platphorm-json-canary/production`],["Workers & Pages fallback",`${accountDash}/workers-and-pages`]],
+        search:"Host · method · path · schema · endpoint",
+        ask:"Which APIs lack a reliable owner or contract today?",
+        recover:"Endpoint Management is live only if visible. API Discovery or enforcement remains a POC extension unless the dashboard proves it."
+      },
+      {
+        section:"ZERO TRUST", slide:"13", title:"Zero Trust bridge",
+        say:"AppSec protects public journeys. Access and Tunnel address the adjacent private-access requirement. I will keep this to one bridge unless it matches your discovery priority.",
+        doNow:["Do not start a second Zero Trust demo.","Use current dashboard state only."],
+        click:"Open Access applications · Open Tunnels/connectors",
+        open:[["Access",`${one}/access/apps`],["Connectors",`${one}/networks/connectors`]],
+        search:"Application · policy · hostname · connector health",
+        ask:"Should private administrative access be in this POC or a separate workstream?",
+        recover:"If the pages are empty, state unconfigured or unverified only when the UI proves it."
+      },
+      {
+        section:"POC", slide:"14", title:"POC outcomes",
+        say:"The before-and-after table is illustrative. The POC target is no customer-visible degradation during agreed tests, p95 within five percent of clean baseline, evidence correlation under ten minutes, and rollback under five minutes by a named owner.",
+        doNow:["Tie every row to an owner and data source.","Confirm that discovery replaces every illustrative value."],
+        click:"Use the table; open evidence only for a specific customer question.",
+        open:[["Security Events",`${dash}/security/analytics/events`],["Worker events",workerEvents]],
+        search:"Time window · status · exceptions · latency · Worker errors",
+        ask:"Which evidence source and owner approves each success gate?",
+        recover:"Do not launch a Quake gameplay rabbit hole. Stay on the AppSec outcome."
+      },
+      {
+        section:"CLOSE", slide:"15", title:"POC scope and ask",
+        say:"Can we schedule a 45-minute POC design session with the application owner, security sponsor, DNS or infrastructure owner, DevOps lead, and AE to replace these assumptions with your real baseline and agree scope, entitlements, rollback, and success metrics?",
+        doNow:["Ask once.","Stop talking and let the customer answer."],
+        click:"No more product claims after this slide.",
+        open:[],
+        search:"None",
+        ask:"Will you schedule the POC design session with those owners?",
+        recover:"If the customer is not ready, ask which owner, evidence gap, or decision gate is missing."
+      },
+      {
+        section:"APPENDIX", slide:"16", title:"Configuration is not request evidence",
+        say:"Use the operator card to separate 200, 403, 429, and the correlated event. The cURL command is Windows-safe and uses double quotes.",
+        doNow:["Use only the dedicated demo paths.","Copy cURL if the browser action is unavailable."],
+        click:"Copy cURL",
+        open:[["Security Events",`${dash}/security/analytics/events`]],
+        search:"Ray ID · path · action · timestamp",
+        ask:"What evidence format does your incident workflow require?",
+        recover:"Never expose a token, cookie, visitor IP, authorization header, or raw request body."
+      },
+      {
+        section:"APPENDIX", slide:"17", title:"Two TLS stories",
+        say:"This Worker Custom Domain terminates visitor TLS at Cloudflare and invokes Worker code. A conventional proxied origin adds a separate origin TLS connection that should normally use Full strict with a valid origin certificate.",
+        doNow:["Identify which architecture is on screen.","Do not blend the two TLS stories."],
+        click:"No live action required.",
+        open:[["SSL/TLS",`${dash}/ssl-tls`]],
+        search:"Edge certificate · encryption mode · origin certificate",
+        ask:"Which origin architecture will the representative POC hostname use?",
+        recover:"Universal SSL alone does not prove the origin is authenticated or inaccessible directly."
+      },
+      {
+        section:"APPENDIX", slide:"18", title:"Product state matrix",
+        say:"Plan, entitlement, configuration, and fresh request telemetry are separate facts. Verify each in its authoritative source.",
+        doNow:["Use the matrix when challenged on entitlement.","Separate snapshot from live telemetry."],
+        click:"No live action required.",
+        open:[["Zone Overview",dash]],
+        search:"Plan · entitlement · enabled state · request event",
+        ask:"Who owns commercial, configuration, and telemetry truth in your environment?",
+        recover:"A visible navigation item is not product entitlement."
+      },
+      {
+        section:"APPENDIX", slide:"19", title:"POC truth boundary",
+        say:"Separate visible current state, customer-approved POC measurements, and account-team verification. Plan, entitlement, limits, support, SLA, and pricing require authoritative confirmation.",
+        doNow:["Name the evidence category before answering.","Capture commercial follow-up with an owner."],
+        click:"No live action required.",
+        open:[],
+        search:"Exact product documentation or contract record",
+        ask:"Which item is current evidence, which is a test target, and which needs account verification?",
+        recover:"Do not convert a visible menu item, illustrative number, or planned test into a product or commercial commitment."
+      },
+      {
+        section:"APPENDIX", slide:"20", title:"Authoritative follow-up",
+        say:"Use official documentation for current guidance and the account dashboard for current state. Contract-specific limits, support, pricing, and entitlement require account verification.",
+        doNow:["Open the narrowest authoritative source.","Capture unanswered items."],
+        click:"Dashboard fallbacks · official source links",
+        open:[["Zone Overview",dash],["Security Rules",`${dash}/security/security-rules`],["Zero Trust",oneHome]],
+        search:"Product name · exact dashboard state · official documentation",
+        ask:"Which follow-up needs an authoritative owner and due date?",
+        recover:"If a dashboard route has moved, use the zone search and preserve the intended product and state."
+      }
+    ];
+
+    const qas = [
+      ["Is the 18 percent automation figure real?", "It is an illustrative role-play baseline. Discovery must replace it with customer-approved traffic data before the POC."],
+      ["Does configuration prove a WAF block?", "No. Configuration proves policy intent. A fresh edge response plus Security Events, action, rule, timestamp, path, and Ray ID proves the observed request decision."],
+      ["Why might a request be missing from Security Events?", "Dashboard event views can be sampled. Keep the exact timestamp, path, action, status, and Ray ID, then use the narrowest available evidence source."],
+      ["What does the JSON viewer prove?", "It is a separate supporting application that renders public-safe JSON and schema responses. It is not a Cloudflare product and does not prove an entitlement."],
+      ["What does the Quake migration prove?", "It is bounded evidence that a full-stack browser FPS was moved to a Cloudflare-backed copy in under two days. It is not a universal performance or migration-time guarantee."],
+      ["Does Universal SSL prove the origin is secure?", "No. It proves managed edge TLS. A conventional proxied origin has a separate origin connection that should normally use Full strict and an authenticated origin certificate."],
+      ["What if the bounded burst never returns 429?", "State that the expected enforcement evidence did not appear. Check rule scope, time window, and distributed counter propagation; do not turn repeated 200s into proof."],
+      ["Are bot scores or Enterprise Bot Management available?", "Only say what the authenticated dashboard and account entitlement currently show. A visible menu item is not entitlement."],
+      ["What is the POC success gate?", "No customer-visible degradation during agreed tests, p95 within five percent of clean baseline, evidence correlation under ten minutes, rollback under five minutes by a named owner, and no critical false positives on the agreed journey."],
+      ["What is the exact next step?", "Schedule a 45-minute POC design session with the application owner, security sponsor, DNS or infrastructure owner, DevOps lead, and AE."],
+      ["What if a direct dashboard URL moves?", "Use the account or zone fallback, search for the same product and resource, and preserve the intended evidence boundary. Do not substitute a nearby page and call it equivalent."],
+      ["What data must never appear in the deck?", "Do not expose tokens, cookies, authorization headers, visitor IP addresses, credentials, or raw request bodies. Use only the public-safe response envelope and redacted evidence."],
+    ];
+
+    const $ = (id) => document.getElementById(id);
+    const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (character) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" })[character]);
+    let index = Math.max(0, Math.min(cues.length - 1, Number(sessionStorage.getItem("correlated-sidecar-cue") || 0)));
+    const timerLengthMs = 30 * 60 * 1000;
+    let timerInterval = null;
+    let timerStartedAt = Number(localStorage.getItem("cloudflare-sidecar-timer-start") || 0);
+    let timerElapsedMs = Number(localStorage.getItem("cloudflare-sidecar-timer-elapsed") || 0);
+    let timerRunning = localStorage.getItem("cloudflare-sidecar-timer-running") === "true";
+
+    function renderLinks(items) {
+      if (!items.length) return "Stay in the deck.";
+      return items.map(([label, url]) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)} ↗</a>`).join("<br>");
+    }
+
+    function render() {
+      const cue = cues[index];
+      $("section").textContent = cue.section;
+      $("slide").textContent = `Slide ${cue.slide}`;
+      $("title").textContent = cue.title;
+      $("heading").textContent = cue.title;
+      $("say").textContent = cue.say;
+      $("doNow").innerHTML = cue.doNow.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+      $("clickInDeck").textContent = cue.click;
+      $("openInCloudflare").innerHTML = renderLinks(cue.open);
+      $("searchTerms").textContent = cue.search;
+      $("askCustomer").textContent = cue.ask;
+      $("checkpoint").textContent = cue.checkpoint || `Pause and confirm: ${cue.ask}`;
+      $("recover").textContent = cue.recover;
+      $("count").textContent = `${index + 1} / ${cues.length}`;
+      $("progress").style.width = `${((index + 1) / cues.length) * 100}%`;
+      $("prev").disabled = index === 0;
+      $("next").textContent = index === cues.length - 1 ? "End" : "Next →";
+      sessionStorage.setItem("correlated-sidecar-cue", String(index));
+    }
+
+    function elapsedMs() {
+      return timerElapsedMs + (timerRunning ? Date.now() - timerStartedAt : 0);
+    }
+
+    function renderTimer() {
+      const remaining = Math.max(0, timerLengthMs - elapsedMs());
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      $("timer").textContent = `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+      $("timerToggle").textContent = timerRunning ? "Pause timer" : elapsedMs() ? "Resume timer" : "Start timer";
+      if (remaining === 0 && timerRunning) toggleTimer();
+    }
+
+    function toggleTimer() {
+      if (timerRunning) {
+        timerElapsedMs += Date.now() - timerStartedAt;
+        timerRunning = false;
+      } else {
+        timerStartedAt = Date.now();
+        timerRunning = true;
+      }
+      localStorage.setItem("cloudflare-sidecar-timer-start", String(timerStartedAt));
+      localStorage.setItem("cloudflare-sidecar-timer-elapsed", String(timerElapsedMs));
+      localStorage.setItem("cloudflare-sidecar-timer-running", String(timerRunning));
+      clearInterval(timerInterval);
+      if (timerRunning) timerInterval = setInterval(renderTimer, 250);
+      renderTimer();
+    }
+
+    function renderQa() {
+      const term = $("qaSearch").value.trim().toLowerCase();
+      const matches = qas.filter(([question, answer]) => `${question} ${answer}`.toLowerCase().includes(term));
+      $("qaResults").innerHTML = matches.map(([question, answer]) => `<article class="qa"><b>${escapeHtml(question)}</b><p>${escapeHtml(answer)}</p></article>`).join("") || `<p>No matching answer. Capture the exact question and verify it authoritatively.</p>`;
+    }
+
+    function previous() { index = Math.max(0, index - 1); render(); }
+    function next() { index = Math.min(cues.length - 1, index + 1); render(); }
+    $("prev").addEventListener("click", previous);
+    $("next").addEventListener("click", next);
+    $("timerToggle").addEventListener("click", toggleTimer);
+    $("qaToggle").addEventListener("click", () => { renderQa(); $("qaDialog").showModal(); $("qaSearch").focus(); });
+    $("qaClose").addEventListener("click", () => $("qaDialog").close());
+    $("qaSearch").addEventListener("input", renderQa);
+    $("discoveryNotes").value = localStorage.getItem("cloudflare-appsec-discovery-notes") || "";
+    $("discoveryNotes").addEventListener("input", () => localStorage.setItem("cloudflare-appsec-discovery-notes", $("discoveryNotes").value));
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowLeft" || event.key === "PageUp") previous();
+      if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " ") { event.preventDefault(); next(); }
+      if (event.key === "Home") { index = 0; render(); }
+      if (event.key === "End") { index = cues.length - 1; render(); }
+    });
+    if (timerRunning) timerInterval = setInterval(renderTimer, 250);
+    renderTimer();
+    renderQa();
+    render();
+  </script>
+</body>
+</html>

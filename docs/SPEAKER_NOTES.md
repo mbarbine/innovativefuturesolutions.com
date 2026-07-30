@@ -674,7 +674,7 @@ That helps find undocumented or legacy endpoints, invalid request shapes, and ga
 ### Say
 I would not write custom code where a native security product solves the problem.
 
-I use a Worker when the customer needs application-specific behavior at the edge — for example, a correlation ID, consistent security headers, canary routing, request normalization, or lightweight pre-origin validation.
+I use a Worker when the customer needs application-specific behavior at the edge — for example, a correlation ID, consistent security headers, staged routing, request normalization, or lightweight pre-origin validation.
 
 The business value is faster iteration without waiting for an origin application release.
 

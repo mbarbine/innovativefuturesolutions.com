@@ -17,7 +17,7 @@ from docx.shared import Inches, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "docs" / "SPEAKER_NOTES.md"
-OUTPUT = ROOT / "public" / "downloads" / "cloudflare-application-security-speaker-notes.docx"
+OUTPUT = ROOT / "docs" / "cloudflare-application-security-speaker-notes.private.docx"
 
 BLUE = "2E74B5"
 DARK_BLUE = "1F4D78"

@@ -9,8 +9,39 @@ const presenterOutput = document.querySelector("#presenter-output");
 const preflightGrid = document.querySelector("#preflight-grid");
 const timerDisplays = [...document.querySelectorAll("#presenter-timer, [data-nav-timer]")];
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const CLOUDFLARE_ACCOUNT_ID = "fd647616bd2ce32ee74a82221b64d9ac";
+const CLOUDFLARE_ZONE = "innovativefuturesolutions.com";
 const JSON_VIEWER_ORIGIN = "https://json.innovativefuturesolutions.com";
 const DEMO_PUBLIC_ORIGIN = "https://innovativefuturesolutions.com";
+const DASHBOARD_LINKS = {
+  accountHome: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}`,
+  zoneOverview: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}`,
+  dnsRecords: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/dns/records`,
+  sslTls: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/ssl-tls`,
+  edgeCertificates: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/ssl-tls/edge-certificates`,
+  securityTraffic: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/analytics/traffic`,
+  securityEvents: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/analytics/events`,
+  securityRules: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/security-rules`,
+  managedRules: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/waf/managed-rules`,
+  customRulesFallback: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/waf/custom-rules`,
+  rateLimitingFallback: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/waf/rate-limiting-rules`,
+  bots: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/bots`,
+  securitySettings: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/${CLOUDFLARE_ZONE}/security/settings`,
+  turnstile: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/turnstile`,
+  webAssets: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/web-assets`,
+  workersAndPages: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/workers-and-pages`,
+  jsonProject: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/workers/services/view/platphorm-json-canary/production`,
+  demoWorker: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/workers/services/view/innovative-future-solutions-security-demo/production`,
+  demoWorkerObservability: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/workers/services/view/innovative-future-solutions-security-demo/production/observability/events`,
+  quakeRoomStateObservability: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/workers/services/view/platphorm-quake-room-state/production/observability/events`,
+  zeroTrustHome: "https://dash.cloudflare.com/one/",
+  accessApps: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/one/access/apps`,
+  tunnelConnectors: `https://dash.cloudflare.com/${CLOUDFLARE_ACCOUNT_ID}/one/networks/connectors`,
+  jsonViewer: JSON_VIEWER_ORIGIN,
+  appsecCanary: DEMO_PUBLIC_ORIGIN,
+  quakeCanonical: "https://quake.innovativefuturesolutions.com",
+  quakeLegacy: "https://quake.platphormnews.com",
+};
 let current = 0;
 let touchStartX = null;
 let turnstileToken = "";
@@ -36,6 +67,16 @@ function initializeJsonViewerLinks() {
       link.dataset.jsonViewerPath,
       link.dataset.jsonPresentation === "security",
     );
+  });
+}
+
+function initializeDashboardLinks() {
+  document.querySelectorAll("[data-dashboard-link]").forEach((link) => {
+    const key = link.dataset.dashboardLink;
+    if (!DASHBOARD_LINKS[key]) return;
+    link.href = DASHBOARD_LINKS[key];
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
   });
 }
 
@@ -220,7 +261,7 @@ async function runPreflight() {
     preflightGrid.append(message);
     setText("[data-presenter-readiness]", "Unavailable");
     setText('[data-live="preflight-summary"]', "Preflight unavailable");
-    setPresenterMessage(error instanceof Error ? error.message : "Unknown preflight error");
+    setPresenterMessage(error instanceof Error ? error.message : "Unclassified preflight error");
   }
 }
 
@@ -240,7 +281,7 @@ async function loadHealth() {
   } catch {
     setText('[data-live="health"]', "Edge check unavailable");
     setHud("worker", "unavailable", false);
-    setHud("tls", "unknown", false);
+    setHud("tls", "verify dashboard", false);
     setHud("edge", "Edge unavailable", false);
   }
 }
@@ -261,12 +302,12 @@ async function loadControls() {
       setText("[data-burst-summary]", controls.rateLimit.status === "active" ? controls.rateLimit.policy : "Control snapshot unavailable");
     }
   } catch {
-    setText('[data-live="waf-status"]', "unknown");
-    setText('[data-live="bot-mode"]', "unknown");
+    setText('[data-live="waf-status"]', "verify dashboard");
+    setText('[data-live="bot-mode"]', "verify dashboard");
     setText('[data-live="api-status"]', "status unavailable");
-    setHud("waf", "unknown", false);
-    setHud("bots", "unknown", false);
-    setHud("api", "unknown", false);
+    setHud("waf", "verify dashboard", false);
+    setHud("bots", "verify dashboard", false);
+    setHud("api", "verify dashboard", false);
   }
 }
 
@@ -313,7 +354,7 @@ async function runProbe(type) {
   badge.textContent = "WAIT";
   try {
     const response = await fetch(path, { cache: "no-store" });
-    const contentType = response.headers.get("content-type") || "unknown";
+    const contentType = response.headers.get("content-type") || "not reported";
     const ray = response.headers.get("cf-ray") || response.headers.get("x-request-id") || "unavailable";
     await response.body?.cancel();
     const time = new Date().toISOString();
@@ -346,7 +387,7 @@ async function runProbe(type) {
     return { blocked, response, ray, time };
   } catch (error) {
     badge.textContent = "ERROR";
-    output.textContent = `Request could not be completed.\n${error instanceof Error ? error.message : "Unknown browser error"}`;
+    output.textContent = `Request could not be completed.\n${error instanceof Error ? error.message : "Unclassified browser error"}`;
     setRunner(isAttack ? "attack" : "baseline", "is-blocked");
     return null;
   }
@@ -540,21 +581,75 @@ function selectMigrationGoal(key) {
   document.querySelector("[data-migration-output]").textContent = migrationGoals[key];
 }
 
+function isTextEntryElement(element) {
+  return ["INPUT", "TEXTAREA", "SELECT"].includes(element?.tagName) || element?.isContentEditable;
+}
+
+function getFullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
+function getFullscreenTarget() {
+  return document.querySelector(".deck-shell") || document.querySelector("#deck") || document.documentElement;
+}
+
+async function requestNativeFullscreen(target) {
+  if (target.requestFullscreen) return target.requestFullscreen({ navigationUI: "hide" });
+  if (target.webkitRequestFullscreen) return target.webkitRequestFullscreen();
+  throw new Error("Fullscreen API unavailable");
+}
+
+async function exitNativeFullscreen() {
+  if (document.exitFullscreen) return document.exitFullscreen();
+  if (document.webkitExitFullscreen) return document.webkitExitFullscreen();
+}
+
+function setPresentationFallback(enabled, reason = "") {
+  document.body.classList.toggle("is-presentation-mode", enabled);
+  document.documentElement.classList.toggle("is-presentation-mode", enabled);
+  setPresenterMessage(
+    enabled
+      ? `Presentation mode enabled${reason ? ` (${reason})` : ""}. Press F or Escape to exit.`
+      : "Presentation mode closed.",
+  );
+  syncFullscreenUi();
+}
+
+function syncFullscreenUi() {
+  const nativeActive = Boolean(getFullscreenElement());
+  const fallbackActive = document.body.classList.contains("is-presentation-mode");
+  const active = nativeActive || fallbackActive;
+  document.body.classList.toggle("is-native-fullscreen", nativeActive);
+  document.querySelectorAll('[data-action="fullscreen"]').forEach((button) => {
+    button.textContent = active ? "Exit presentation" : "Full screen";
+    button.setAttribute("aria-pressed", String(active));
+  });
+  if (nativeActive) setPresenterMessage("Fullscreen presentation mode enabled. Press F or Escape to exit.");
+}
+
 async function toggleFullscreen() {
+  const nativeActive = Boolean(getFullscreenElement());
+  const fallbackActive = document.body.classList.contains("is-presentation-mode");
+
   try {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      setPresenterMessage("Fullscreen presentation mode closed.");
+    if (nativeActive) {
+      await exitNativeFullscreen();
+      setPresentationFallback(false);
+      return;
+    }
+
+    if (fallbackActive) {
+      setPresentationFallback(false);
       return;
     }
 
     // A modal dialog makes every control behind its backdrop non-interactive.
-    // Close it before entering fullscreen so slide and navigation buttons remain usable.
     if (presenterDialog?.open) presenterDialog.close();
-    await document.documentElement.requestFullscreen();
-    setPresenterMessage("Fullscreen presentation mode enabled. Press F or Escape to exit.");
+    await requestNativeFullscreen(getFullscreenTarget());
+    if (getFullscreenElement()) syncFullscreenUi();
+    else setPresentationFallback(true, "native fullscreen state unavailable");
   } catch {
-    setPresenterMessage("Fullscreen is unavailable in this browser context.");
+    setPresentationFallback(true, "browser fullscreen API unavailable");
   }
 }
 
@@ -633,9 +728,13 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  const tag = document.activeElement?.tagName;
-  if (["INPUT", "TEXTAREA", "BUTTON", "A", "SELECT"].includes(tag)) return;
+  if (isTextEntryElement(document.activeElement)) return;
   const key = event.key.toLowerCase();
+  if (event.key === "Escape" && document.body.classList.contains("is-presentation-mode")) {
+    event.preventDefault();
+    setPresentationFallback(false);
+    return;
+  }
   if (key === "p" || event.key === "?") {
     event.preventDefault();
     openPresenter();
@@ -661,7 +760,7 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key === "Home") showSlide(0);
   if (event.key === "End") showSlide(slides.length - 1);
-});
+}, true);
 
 document.addEventListener("touchstart", (event) => {
   touchStartX = event.changedTouches[0]?.clientX ?? null;
@@ -675,12 +774,16 @@ document.addEventListener("touchend", (event) => {
 }, { passive: true });
 
 window.addEventListener("hashchange", () => showSlide(routeNumber(), false));
+document.addEventListener("fullscreenchange", syncFullscreenUi);
+document.addEventListener("webkitfullscreenchange", syncFullscreenUi);
 document.querySelector("#demo-login")?.addEventListener("submit", submitLogin);
 
 showSlide(routeNumber(), false);
 initializeJsonViewerLinks();
+initializeDashboardLinks();
 restoreEvent();
 loadHealth();
 loadControls();
 setupTurnstile();
 renderTimer();
+syncFullscreenUi();

@@ -16,7 +16,7 @@ export interface Env {
 
 type JsonRecord = Record<string, unknown>;
 
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.4.2";
 
 const BOT_CONTROL_PRESENTATIONS = {
   "bot-fight-mode": {
@@ -53,9 +53,9 @@ function botControlPresentation(env: Env) {
   if (!presentation) {
     return {
       mode: "unknown",
-      label: "Unknown — verify in dashboard",
+      label: "Verify current dashboard state",
       configured: false,
-      entitlement: env.BOT_PRODUCT_ENTITLEMENT ?? "Unknown — verify in dashboard",
+      entitlement: env.BOT_PRODUCT_ENTITLEMENT ?? "Verify current dashboard state",
       evidence: "Bot control configuration has not been verified.",
       scoreEvidenceVisible: false,
     };
@@ -65,7 +65,7 @@ function botControlPresentation(env: Env) {
     mode,
     label: presentation.label,
     configured: presentation.configured,
-    entitlement: env.BOT_PRODUCT_ENTITLEMENT ?? "Unknown — verify in dashboard",
+    entitlement: env.BOT_PRODUCT_ENTITLEMENT ?? "Verify current dashboard state",
     evidence: scoreEvidenceVisible
       ? `${presentation.label} is configured and score-based evidence is visible in live telemetry.`
       : `${presentation.label} is configured. Score-based policy is not demonstrated without visible live telemetry.`,
@@ -92,7 +92,7 @@ const jsonHeaders = {
 const baseSecurityHeaders = {
   "content-security-policy": [
     "default-src 'self'",
-    "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'sha256-nHTw4hvUfWu8zi0PApob3Z4kQVMpo1fdeRlvItmKS1U='",
+    "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'sha256-YF4oFCyMY3+gGRYhWTOHyH0FlC+UnB6XbqN+ViJu1no='",
     "script-src-elem 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'unsafe-inline'",
     "script-src-attr 'none'",
     "style-src 'self'",
@@ -167,7 +167,7 @@ function securityControls(env: Env): JsonRecord {
     source: "Cloudflare deployment configuration snapshot",
     capturedAt: env.SECURITY_DEPLOYED_AT ?? null,
     zone: {
-      plan: env.ZONE_PLAN ?? "Unknown — verify in dashboard",
+      plan: env.ZONE_PLAN ?? "Verify current dashboard state",
       evidence: env.ZONE_PLAN ? "deployment variable" : "not verified by this public Worker",
     },
     waf: {
@@ -284,7 +284,7 @@ function preflight(env: Env, request: Request): JsonRecord {
     checks,
     limitations: [
       bots.evidence,
-      `Zone plan: ${env.ZONE_PLAN ?? "Unknown — verify in dashboard"}. Product entitlement is verified separately.`,
+      `Zone plan: ${env.ZONE_PLAN ?? "Verify current dashboard state"}. Product entitlement is verified separately.`,
       "Worker-backed API Shield endpoint metrics may not populate even when endpoints are catalogued.",
       "Security Event details remain in the authenticated Cloudflare dashboard.",
       "Rate counters are scoped to Cloudflare data-center locations and can take a few seconds to propagate.",
@@ -355,7 +355,7 @@ function health(env: Env, request: Request): JsonRecord {
 const openapi = `openapi: 3.1.0
 info:
   title: Innovative Future Solutions Application Security Demo
-  version: 1.4.0
+  version: 1.4.2
   description: Public-safe endpoints used by the Cloudflare application-security walkthrough.
 servers:
   - url: https://innovativefuturesolutions.com
@@ -688,7 +688,7 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
 
   if ((url.pathname === "/rss.xml" || url.pathname === "/atom.xml") && method === "GET") {
     return new Response(
-      '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Innovative Future Solutions Application Security</title><link>https://innovativefuturesolutions.com/</link><description>Cloudflare application-security demo releases and evidence updates.</description><lastBuildDate>Wed, 22 Jul 2026 00:00:00 GMT</lastBuildDate><item><title>Guided Cloudflare canary demo</title><link>https://innovativefuturesolutions.com/#/10</link><guid isPermaLink="true">https://innovativefuturesolutions.com/#/10</guid><pubDate>Wed, 22 Jul 2026 00:00:00 GMT</pubDate><description>Added guided JSON graph handoffs for live security-control evidence.</description></item></channel></rss>\n',
+      '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Innovative Future Solutions Application Security</title><link>https://innovativefuturesolutions.com/</link><description>Cloudflare application-security demo releases and evidence updates.</description><lastBuildDate>Wed, 22 Jul 2026 00:00:00 GMT</lastBuildDate><item><title>Guided Cloudflare evidence demo</title><link>https://innovativefuturesolutions.com/#/10</link><guid isPermaLink="true">https://innovativefuturesolutions.com/#/10</guid><pubDate>Wed, 22 Jul 2026 00:00:00 GMT</pubDate><description>Added guided JSON graph handoffs for live security-control evidence.</description></item></channel></rss>\n',
       { headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=3600" } },
     );
   }

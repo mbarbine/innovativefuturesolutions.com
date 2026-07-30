@@ -18,11 +18,12 @@
     <title>Application Security at the Edge — Innovative Future Solutions</title>
     <link rel="canonical" href="https://innovativefuturesolutions.com/" />
     <link rel="alternate" type="application/rss+xml" title="Innovative Future Solutions security updates" href="/rss.xml" />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%2307110d'/%3E%3Ccircle cx='32' cy='32' r='27' fill='none' stroke='%23b7ff65' stroke-width='3'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23b7ff65'%3EIF%3C/text%3E%3C/svg%3E" />
-    <link id="deck-theme" rel="stylesheet" href="/styles.css?v=20260730.3" />
-    <script src="/theme.js?v=20260730.3"></script>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='32' fill='%23020509'/%3E%3Ccircle cx='32' cy='32' r='27' fill='none' stroke='%23ff6b00' stroke-width='3'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-family='Arial' font-size='18' font-weight='700' fill='%23ff8a1f'%3EIF%3C/text%3E%3C/svg%3E" />
+    <link id="deck-theme" rel="stylesheet" href="/styles.css?v=20260730.5" />
+    <link rel="stylesheet" href="/presentation-hotfix.css?v=20260730.5" />
+    <script src="/theme.js?v=20260730.5"></script>
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" defer></script>
-    <script src="/app.js?v=20260730.3" type="module"></script>
+    <script src="/app.js?v=20260730.5" type="module"></script>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -46,7 +47,7 @@
             "name": "Innovative Future Solutions",
             "publisher": { "@id": "https://innovativefuturesolutions.com/#organization" },
             "datePublished": "2026-07-21",
-            "dateModified": "2026-07-22"
+            "dateModified": "2026-07-30"
           },
           {
             "@type": ["WebApplication", "PresentationDigitalDocument"],
@@ -60,7 +61,7 @@
             "publisher": { "@id": "https://innovativefuturesolutions.com/#organization" },
             "isPartOf": { "@id": "https://innovativefuturesolutions.com/#website" },
             "datePublished": "2026-07-21",
-            "dateModified": "2026-07-22"
+            "dateModified": "2026-07-30"
           }
         ]
       }
@@ -68,6 +69,7 @@
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
+    <div class="deck-shell" id="presentation-shell">
     <header class="topbar">
       <a class="brand" href="#/1" aria-label="Innovative Future Solutions home">
         <span class="brand-mark" aria-hidden="true">IF</span>
@@ -81,7 +83,24 @@
         <span><i></i> Turnstile <b data-hud="turnstile">checking</b></span>
         <span><i></i> APIs <b data-hud="api">checking</b></span>
       </div>
-      <div class="live-pill"><span></span><b data-hud="edge">Connecting to edge</b></div>
+      <div class="topbar-actions">
+        <details class="cloudflare-menu">
+          <summary>LIVE CLOUDFLARE VIEWS</summary>
+          <nav aria-label="Live Cloudflare views">
+            <a data-dashboard-link="accountHome">Account home ↗</a>
+            <a data-dashboard-link="zoneOverview">Zone overview ↗</a>
+            <a data-dashboard-link="securityEvents">Security events ↗</a>
+            <a data-dashboard-link="managedRules">Managed rules ↗</a>
+            <a data-dashboard-link="customRulesFallback">Custom rules ↗</a>
+            <a data-dashboard-link="rateLimitingFallback">Rate limiting ↗</a>
+            <a data-dashboard-link="demoWorkerObservability">AppSec Worker ↗</a>
+            <a data-dashboard-link="quakeRoomStateObservability">Quake room Worker ↗</a>
+            <a data-dashboard-link="workersAndPages">Workers &amp; Pages ↗</a>
+            <a data-dashboard-link="zeroTrustHome">Zero Trust ↗</a>
+          </nav>
+        </details>
+        <div class="live-pill"><span></span><b data-hud="edge">Connecting to edge</b></div>
+      </div>
     </header>
 
     <main class="deck" id="deck" aria-label="Application Security with Cloudflare slide deck">
@@ -89,15 +108,16 @@
         <div class="eyebrow">01 / APPLICATION SECURITY</div>
         <div class="hero-grid">
           <div>
-            <p class="kicker">SECURITY · PERFORMANCE · ONE REQUEST PATH</p>
+            <p class="kicker">THREE LIVE APPS. ONE CLOUDFLARE REQUEST PATH.</p>
             <h1>Security<br />becomes<br /><em>the edge.</em></h1>
-            <p class="lede">One global request path for security, performance, and programmable control.</p>
+            <p class="lede">Today I’ll use this live application to prove DNS, TLS, WAF, bot/human verification, API visibility, rate limiting, event correlation, and a Zero Trust bridge.</p>
             <div class="worker-facts" aria-label="Cloudflare differentiators">
-              <span>One global network</span><span>Single-pass security</span><span>Start with DNS + SSL</span>
+              <span>DNS + managed TLS</span><span>AppSec + live evidence</span><span>One bounded POC path</span>
             </div>
             <div class="hero-actions">
-              <button class="primary" data-action="next">Begin the working session <span>→</span></button>
-              <button class="secondary" data-action="run-preflight">Check live readiness</button>
+              <button class="primary" data-action="run-preflight">Run readiness check</button>
+              <a class="secondary as-link" data-dashboard-link="zoneOverview">Open zone overview ↗</a>
+              <a class="secondary as-link" data-dashboard-link="demoWorkerObservability">Open Worker observability ↗</a>
             </div>
             <div class="live-proof-strip" aria-live="polite">
               <span class="status-dot"></span>
@@ -105,15 +125,14 @@
               <small data-live="preflight-observed">Not yet run</small>
             </div>
           </div>
-          <aside class="runbook-card" aria-label="Application security working session">
-            <div class="runbook-top"><span>30-MINUTE WORKING SESSION</span><b>CUSTOMER LED</b></div>
+          <aside class="runbook-card" aria-label="Thirty-minute working session">
+            <div class="runbook-top"><span>30-MINUTE WORKING SESSION</span><b>LIVE</b></div>
             <ol>
-              <li><span>01—04</span><div><strong>Qualify the outcome</strong><small>Journey · pain · success</small></div><b>ALIGN</b></li>
-              <li><span>05—08</span><div><strong>Establish the control point</strong><small>Network · DNS · TLS · architecture</small></div><b>GROUND</b></li>
-              <li><span>09—13</span><div><strong>Inspect controls and evidence</strong><small>Traffic · WAF · abuse · API · private access</small></div><b>PROVE</b></li>
-              <li><span>14—15</span><div><strong>Design the next step</strong><small>Two-week POC · named owners</small></div><b>COMMIT</b></li>
+              <li><span>01</span><div><strong>Discover</strong><small>journey · pain · success</small></div><b>3 MIN</b></li>
+              <li><span>02</span><div><strong>Frame</strong><small>risk · outcome · architecture</small></div><b>7 MIN</b></li>
+              <li><span>03</span><div><strong>Prove</strong><small>traffic · rules · evidence</small></div><b>15 MIN</b></li>
+              <li><span>04</span><div><strong>Decide</strong><small>POC · owners · next step</small></div><b>5 MIN</b></li>
             </ol>
-            <p>Plan tier, product entitlement, configuration, and enforcement evidence remain separate facts.</p>
           </aside>
         </div>
       </section>
@@ -123,10 +142,14 @@
         <div class="split">
           <div>
             <h2>Start with the journey.<br /><em>Not the feature list.</em></h2>
-            <p class="lede compact">This is a working session: align on the customer outcome, inspect a practical control path, and leave with a bounded next step.</p>
-            <div class="honesty-note">
-              <strong>Operating posture</strong>
-              <span>Interrupt, challenge assumptions, and redirect the proof toward the business journey that matters most.</span>
+            <div class="scenario-stack">
+              <article><b>ROLE-PLAY CUSTOMER</b><p>A digital product team is launching public web, API, and real-time browser workloads.</p></article>
+              <article><b>BUSINESS PROBLEM</b><p>Abusive traffic reaches application code, teams lack a fast evidence path, and security exceptions slow releases.</p></article>
+              <article><b>WHAT WE ARE TESTING</b><p>Can Cloudflare reduce exposure while preserving customer experience and making request evidence easier to use?</p></article>
+            </div>
+            <div class="hero-actions compact-actions">
+              <a class="secondary as-link" href="https://innovativefuturesolutions.com/#/1" target="_blank" rel="noopener noreferrer">Open production deck ↗</a>
+              <a class="secondary as-link" data-dashboard-link="securityTraffic">Open Security Traffic ↗</a>
             </div>
           </div>
           <aside class="evidence-card live-card">
@@ -158,15 +181,21 @@
 
       <section class="slide" data-title="Business impact" aria-hidden="true">
         <div class="slide-number">04 / TRANSLATE RISK INTO OUTCOMES</div>
-        <div class="centered">
+        <div class="centered impact-slide">
           <h2>Protect the application.<br /><em>Preserve the experience.</em></h2>
-          <p class="lede compact">The objective is not simply more blocking. It is resilient customer journeys, less abusive origin load, faster investigations, and safer change.</p>
-          <div class="metric-row four-metrics">
-            <div><small>AVAILABILITY</small><strong>Stay online</strong><span>absorb and filter abusive traffic</span></div>
-            <div><small>EXPERIENCE</small><strong>Keep it fast</strong><span>protect legitimate customer paths</span></div>
-            <div><small>OPERATIONS</small><strong>See decisions</strong><span>correlate traffic, actions, and evidence</span></div>
-            <div><small>CHANGE</small><strong>Roll back</strong><span>stage narrowly with named ownership</span></div>
+          <div class="metric-row four-metrics" aria-label="Illustrative customer baseline">
+            <div><small>UNWANTED AUTOMATION</small><strong>18%</strong><span>of peak requests</span></div>
+            <div><small>CUSTOMER IMPACT</small><strong>2 / MO</strong><span>visible slowdowns</span></div>
+            <div><small>CORRELATION</small><strong>45 MIN</strong><span>request to cause</span></div>
+            <div><small>POLICY CHANGE</small><strong>3–5 DAYS</strong><span>idea to production</span></div>
           </div>
+          <div class="product-grid four-up compact-grid" aria-label="Proof of concept targets">
+            <article><b>EXPERIENCE</b><strong>No degradation</strong><p>No customer-visible degradation during agreed tests.</p><span>PROTECT THE JOURNEY</span></article>
+            <article><b>PERFORMANCE</b><strong>Within 5%</strong><p>p95 remains within 5% of the clean baseline.</p><span>MEASURE, DO NOT ASSUME</span></article>
+            <article><b>EVIDENCE</b><strong>Under 10 min</strong><p>Correlate block, rule, path, timestamp, and Ray ID.</p><span>SHARED INVESTIGATION</span></article>
+            <article><b>ROLLBACK</b><strong>Under 5 min</strong><p>A named owner can reverse the agreed control.</p><span>TESTED RECOVERY</span></article>
+          </div>
+          <p class="assumption-footnote">Illustrative role-play baseline and targets for discovery. Replace every value with customer-approved measurements before a POC begins.</p>
         </div>
       </section>
 
@@ -174,109 +203,148 @@
         <div class="slide-number">05 / WHY CLOUDFLARE IS THE CONTROL POINT</div>
         <div class="appendix-heading">
           <h2>Different by<br /><em>network design.</em></h2>
-          <p>Cloudflare’s differentiation starts with the network—not a single signature set. The same origin-independent policy layer can front public clouds, SaaS, and private infrastructure.</p>
+          <p>Cloudflare puts security, performance, visibility, and compute on one globally distributed request path.</p>
         </div>
         <div class="product-grid four-up">
-          <article><b>EVERY SERVICE</b><strong>Every data center</strong><p>Security, performance, visibility, and compute operate throughout the network.</p><span>ONE OPERATING MODEL</span></article>
-          <article><b>SINGLE PASS</b><strong>One inspection path</strong><p>Decisions happen close to the request source without chaining separate point products.</p><span>LESS BACKHAUL</span></article>
-          <article><b>ORIGIN INDEPENDENT</b><strong>Across environments</strong><p>Apply consistent policy to applications across clouds, SaaS platforms, and private infrastructure.</p><span>CONSISTENT CONTROL</span></article>
-          <article><b>EXPANSION PATH</b><strong>Beyond AppSec</strong><p>Workers and Zero Trust extend the same control plane when the requirement earns it.</p><span>PLATFORM, NOT PROOF</span></article>
+          <article><b>ONE GLOBAL NETWORK</b><strong>Every service, every data center</strong><p>The same edge carries DNS, TLS, delivery, security, visibility, and compute.</p><span>ONE OPERATING MODEL</span></article>
+          <article><b>SINGLE PASS</b><strong>Inspect once</strong><p>Apply layered decisions close to the request source without serial backhaul through point products.</p><span>LESS LATENCY + COMPLEXITY</span></article>
+          <article><b>ORIGIN INDEPENDENT</b><strong>Protect mixed estates</strong><p>Apply consistent policy across public cloud, SaaS, private infrastructure, and Worker origins.</p><span>CONSISTENT CONTROL</span></article>
+          <article><b>EVIDENCE PATH</b><strong>Request to decision</strong><p>Connect traffic, action, rule, timestamp, path, Ray ID, and application telemetry.</p><span>OPERABLE SECURITY</span></article>
+        </div>
+        <div class="dashboard-handoff">
+          <div><b>BOTTOM LINE</b><span>Cloudflare becomes the shared edge operating model—not another security hop.</span></div>
+          <nav aria-label="Live Cloudflare account evidence">
+            <a data-dashboard-link="accountHome">Account Home ↗</a>
+            <a data-dashboard-link="zoneOverview">Zone Overview ↗</a>
+            <a data-dashboard-link="securityEvents">Security Events ↗</a>
+          </nav>
         </div>
       </section>
 
-      <section class="slide" data-title="Approachable onboarding" aria-hidden="true">
-        <div class="slide-number">06 / APPROACHABLE ONBOARDING</div>
-        <div class="split">
-          <div>
-            <h2>Move the front door.<br /><em>Keep the application.</em></h2>
-            <p class="lede compact">Foundational onboarding does not require an application rewrite. DNS, Universal SSL, CDN, automatic DDoS protection, and a managed WAF baseline create an accessible starting point.</p>
-            <ol class="flow-list">
-              <li>Add the domain and review imported DNS records</li>
-              <li>Update authoritative nameservers for the chosen full-zone setup</li>
-              <li>Proxy the relevant application and API records</li>
-              <li>Validate SSL/TLS, baseline traffic, then enforce narrowly</li>
-            </ol>
-          </div>
-          <aside class="evidence-card">
-            <div class="card-label">STATE MUST STAY SEPARATE</div>
-            <dl>
-              <div><dt>Plan tier</dt><dd>Commercial container</dd></div>
-              <div><dt>Entitlement</dt><dd>Product access</dd></div>
-              <div><dt>Configuration</dt><dd>Control is set</dd></div>
-              <div><dt>Evidence</dt><dd>Request outcome observed</dd></div>
-            </dl>
-            <p>Enterprise adds depth, control, support, and contract-specific capabilities. Disable or roll back the rule first; proxy or DNS rollback is the broader contingency.</p>
-          </aside>
+      <section class="slide" data-title="Three applications" aria-hidden="true">
+        <div class="slide-number">06 / THREE LIVE APPLICATIONS</div>
+        <div class="appendix-heading wide">
+          <h2>Three applications.<br /><em>One edge operating model.</em></h2>
+          <p>Each application shows a different workload, evidence path, and migration boundary.</p>
         </div>
+        <div class="product-grid three-up application-cards">
+          <article>
+            <b>01 · APPSEC CANARY</b><strong>innovativefuturesolutions.com</strong>
+            <p>Worker-backed customer deck with live health, WAF proof, bounded rate proof, API inventory, and public-safe request evidence.</p>
+            <div class="inline-actions"><a data-dashboard-link="appsecCanary">Public app ↗</a><a data-dashboard-link="demoWorkerObservability">Worker observability ↗</a><a data-dashboard-link="securityEvents">Security events ↗</a></div>
+          </article>
+          <article>
+            <b>02 · JSON VIEWER</b><strong>json.innovativefuturesolutions.com</strong>
+            <p>A separate supporting application for readable JSON, schema, and public-safe response inspection.</p>
+            <div class="inline-actions"><a data-dashboard-link="jsonViewer">Public app ↗</a><a data-dashboard-link="jsonProject">Cloudflare project ↗</a><a data-dashboard-link="workersAndPages">Workers &amp; Pages ↗</a></div>
+          </article>
+          <article>
+            <b>03 · QUAKECRAFT FPS</b><strong>quake.innovativefuturesolutions.com</strong>
+            <p>Full-stack browser FPS migrated in under two days; the bounded proof covers Cloudflare delivery and room-state observability, not a universal performance claim.</p>
+            <div class="inline-actions"><a data-dashboard-link="quakeCanonical">Cloudflare copy ↗</a><a data-dashboard-link="quakeRoomStateObservability">Room observability ↗</a><a data-dashboard-link="quakeLegacy">Legacy baseline ↗</a></div>
+          </article>
+        </div>
+        <div class="callout-strip"><b>ONE OPERATING MODEL</b><span>Different workloads · common edge controls · shared evidence · explicit truth boundaries</span></div>
       </section>
 
       <section class="slide" data-title="Target architecture" aria-hidden="true">
         <div class="slide-number">07 / TARGET ARCHITECTURE</div>
-        <h2 class="architecture-title">Protect public paths. <em>Remove private exposure.</em></h2>
-        <div class="product-grid two-up">
-          <article><b>PUBLIC APPLICATIONS</b><strong>AppSec + delivery</strong><p>DDoS, WAF, bots, rate limiting, API controls, caching and delivery, with Workers only where custom behavior is justified.</p><span>SECURITY + PERFORMANCE</span></article>
-          <article><b>PRIVATE SURFACES</b><strong>Access + Tunnel</strong><p>Place admin, preview, internal, and partner surfaces behind identity-aware policy and outbound-only connectivity.</p><span>ZERO TRUST</span></article>
+        <h2 class="architecture-title">Public stays available. <em>Private stops being public.</em></h2>
+        <div class="product-grid two-up architecture-chains">
+          <article><b>PUBLIC REQUEST CHAIN</b><strong>User → Cloudflare edge → application</strong><p>DNS → managed edge TLS → DDoS → bot signals → WAF → rate limiting → API controls → Worker or origin.</p><span>INSPECT + ENFORCE ON ONE PATH</span></article>
+          <article><b>PRIVATE REQUEST CHAIN</b><strong>User → Access policy → Tunnel → private resource</strong><p>Authenticate identity and context first; allow only authorized requests over outbound-only connectivity.</p><span>REMOVE UNNECESSARY EXPOSURE</span></article>
         </div>
         <div class="closing-row">
-          <p><strong>AppSec protects what must remain public.</strong> Zero Trust removes unnecessary exposure from private administrative surfaces.</p>
+          <p><strong>Takeaway:</strong> AppSec protects what must remain public. Access and Tunnel reduce exposure for admin, preview, internal, and partner paths.</p>
+          <div class="hero-actions compact-actions">
+            <a class="secondary as-link" data-dashboard-link="securityTraffic">Public traffic ↗</a>
+            <a class="secondary as-link" data-dashboard-link="accessApps">Open Access applications ↗</a>
+            <a class="secondary as-link" data-dashboard-link="tunnelConnectors">Open Tunnels/connectors ↗</a>
+          </div>
         </div>
       </section>
 
-      <section class="slide" data-title="Portal foundations" aria-hidden="true">
-        <div class="slide-number">08 / LIVE DEMO 1 · FOUNDATION FIRST</div>
-        <div class="split domain-layout">
+      <section class="slide" data-title="DNS TLS and Worker context" aria-hidden="true">
+        <div class="slide-number">08 / APPSEC DEMO · DNS + TLS + WORKER</div>
+        <div class="split">
           <div>
-            <h2>Verify context.<br /><em>Then inspect controls.</em></h2>
-            <p class="lede compact">The portal sequence starts with the requirements that put HTTP traffic on the intended Cloudflare path.</p>
-            <ol class="flow-list">
-              <li>Confirm the correct zone and active context</li>
-              <li>Verify the application record is proxied orange-cloud</li>
-              <li>Review SSL/TLS mode and edge certificate posture</li>
-              <li>Move to Application Security analytics and enforcement</li>
-            </ol>
+            <h2>Verify the front door.<br /><em>Then prove the runtime.</em></h2>
+            <p class="lede compact">For this Worker custom domain, Cloudflare serves the application and the edge certificate. There is no conventional second web-origin hop for this route.</p>
+            <div class="product-grid three-up compact-grid">
+              <article><b>DNS</b><strong>Proxied hostname</strong><p>Confirm the zone and record that place Cloudflare on the request path.</p><span>ROUTING CONTEXT</span></article>
+              <article><b>EDGE TLS</b><strong>Managed certificate</strong><p>Confirm SSL/TLS overview and Edge Certificates for the public hostname.</p><span>VISITOR TO CLOUDFLARE</span></article>
+              <article><b>WORKER</b><strong>Live runtime</strong><p>Use Worker observability plus the public health response to confirm the deployed application.</p><span>APPLICATION CONTEXT</span></article>
+            </div>
+            <div class="hero-actions compact-actions">
+              <a class="secondary as-link" data-dashboard-link="zoneOverview">Zone overview ↗</a>
+              <a class="secondary as-link" data-dashboard-link="dnsRecords">DNS records ↗</a>
+              <a class="secondary as-link" data-dashboard-link="sslTls">SSL/TLS overview ↗</a>
+              <a class="secondary as-link" data-dashboard-link="edgeCertificates">Edge certificates ↗</a>
+            </div>
           </div>
-          <div class="route-visual" aria-label="Cloudflare portal verification sequence">
-            <div class="route-node"><small>01 · ZONE</small><strong>Correct active context</strong></div>
-            <div class="route-line"><i></i><span>verify</span></div>
-            <div class="route-node active"><small>02 · DNS</small><strong>Proxied hostname</strong></div>
-            <div class="route-line"><i></i><span>then</span></div>
-            <div class="route-node"><small>03 · SSL/TLS</small><strong>Edge certificate posture</strong></div>
-          </div>
+          <aside class="evidence-card live-card">
+            <div class="card-label">PUBLIC-SAFE WORKER CONTEXT</div>
+            <div class="status-line"><span class="status-dot"></span><strong data-live="health">Checking edge…</strong></div>
+            <dl>
+              <div><dt>Service</dt><dd data-live="service">—</dd></div>
+              <div><dt>Cloudflare colo</dt><dd data-live="colo">—</dd></div>
+              <div><dt>TLS</dt><dd data-live="tls">—</dd></div>
+              <div><dt>Protocol</dt><dd data-live="protocol">—</dd></div>
+            </dl>
+            <div class="hero-actions stacked-actions">
+              <button class="secondary" data-action="refresh-health">Refresh status</button>
+              <a class="secondary as-link" data-dashboard-link="demoWorkerObservability">Worker observability ↗</a>
+            </div>
+          </aside>
         </div>
-        <p class="microcopy evidence-boundary">This demo uses a Worker Custom Domain: edge TLS terminates at Cloudflare and there is no conventional second web-origin TLS hop. Existing proxied origins normally use a separate secure origin connection, typically Full (strict) with a valid origin certificate.</p>
       </section>
 
       <section class="slide" data-title="Traffic and Security Events" aria-hidden="true">
         <div class="slide-number">09 / APPSEC DEMO · TRAFFIC + EVIDENCE</div>
         <div class="appendix-heading">
           <h2>Baseline broadly.<br /><em>Investigate precisely.</em></h2>
-          <p>Analytics and Events answer different questions; neither a menu item nor a screenshot proves entitlement or enforcement.</p>
+          <p>Traffic shows the request population. Events shows sampled requests associated with a security decision. Configuration shows policy intent.</p>
         </div>
-        <div class="product-grid two-up">
+        <div class="product-grid three-up">
           <article><b>SECURITY ANALYTICS</b><strong>All incoming HTTP traffic</strong><p>Use the broad traffic profile to establish a baseline, inspect suspicious patterns, and choose a narrow policy.</p><span>VISIBILITY, NOT ACTION PROOF</span></article>
-          <article><b>SECURITY EVENTS</b><strong>Flagged or acted-on requests</strong><p>Correlate action, source product, path, timestamp, and Ray ID. Sampled data may not display every request.</p><span>REQUEST-LEVEL EVIDENCE</span></article>
+          <article><b>SECURITY EVENTS</b><strong>Security decisions</strong><p>For a block, correlate status, timestamp, path, action, rule, and Ray ID. Sampled data may not display every request.</p><span>REQUEST-LEVEL EVIDENCE</span></article>
+          <article><b>RULE CONFIGURATION</b><strong>Policy intent</strong><p>Managed, custom, and rate-limiting rules show what is configured; they do not alone prove what happened to a fresh request.</p><span>CONFIGURATION ≠ EVIDENCE</span></article>
+        </div>
+        <div class="hero-actions compact-actions">
+          <a class="secondary as-link" data-dashboard-link="securityTraffic">Open Security Traffic ↗</a>
+          <a class="secondary as-link" data-dashboard-link="securityEvents">Open Security Events ↗</a>
+          <a class="secondary as-link" data-dashboard-link="securityRules">Open Security Rules ↗</a>
         </div>
       </section>
 
       <section class="slide" data-title="Rules and enforcement" aria-hidden="true">
         <div class="slide-number">10 / APPSEC DEMO · RULES</div>
-        <div class="split">
+        <div class="split proof-console-layout">
           <div>
             <h2>Maintain the baseline.<br /><em>Encode customer intent.</em></h2>
-            <p class="lede compact">Managed Rules provide maintained coverage; Custom Rules express customer-specific policy. Neither configuration alone proves a request was blocked.</p>
-            <div class="rule-builder">
-              <span>BASELINE</span><code>Managed Rules</code><span>+</span><code>Scoped Custom Rule</code><span>→</span><b>FRESH EVENT</b>
+            <p class="lede compact">Managed Rules provide maintained coverage; Custom Rules express customer-specific intent. Start with observe, tune narrowly, challenge where context helps, and block only with agreed evidence and rollback.</p>
+            <div class="callout-strip enforcement-model"><b>OPERATING MODEL</b><span>OBSERVE → TUNE → CHALLENGE → BLOCK</span></div>
+            <div class="rule-expression">
+              <span>DEMO SCOPE · VERIFY AGAINST DASHBOARD</span>
+              <code>http.host eq "innovativefuturesolutions.com" and http.request.uri.path eq "/attack-lab" and http.request.uri.query contains "attack=xss"</code>
             </div>
-            <div class="honesty-note">
-              <strong>Evidence rule</strong>
-              <span>A maintained baseline is not complete protection. A configured rule becomes enforcement evidence only when a matching request produces the expected decision and event.</span>
+            <p class="binding-note"><strong>Configuration proves intent.</strong> A fresh request proves enforcement. The Security Event explains why Cloudflare acted.</p>
+            <div class="hero-actions compact-actions">
+              <button class="secondary" data-action="safe-request">Run safe request</button>
+              <button class="danger" data-action="attack-request">Send XSS probe</button>
+              <a class="secondary as-link" data-dashboard-link="managedRules">Open Managed Rules ↗</a>
+              <a class="secondary as-link" data-dashboard-link="customRulesFallback">Open Custom Rules ↗</a>
+              <a class="secondary as-link" data-dashboard-link="securityEvents">Open Security Events ↗</a>
             </div>
           </div>
-          <aside class="evidence-card">
-            <div class="card-label">PUBLIC-SAFE CONTROL SNAPSHOT</div>
-            <div class="big-status"><span data-live="waf-status">Checking…</span></div>
-            <p class="muted" data-live="waf-rule">Rule snapshot pending</p>
-            <a class="secondary as-link" href="/api/security-controls" target="_blank" rel="noopener noreferrer">Inspect separated control state ↗</a>
+          <aside class="event-card evidence-card">
+            <div class="request-head"><span data-result="badge">READY</span><b data-live="waf-status">Checking…</b></div>
+            <div class="mini-runner"><span data-runner="baseline">200</span><span data-runner="attack">403</span><span data-runner="evidence">EVENT</span></div>
+            <pre data-result="output">Choose a request to send through Cloudflare.</pre>
+            <dl>
+              <div><dt>Ray ID</dt><dd data-result="ray">Run the XSS probe first</dd></div>
+              <div><dt>Observed</dt><dd data-result="time">—</dd></div>
+            </dl>
           </aside>
         </div>
       </section>
@@ -285,37 +353,51 @@
         <div class="slide-number">11 / APPSEC DEMO · RATE + BOTS</div>
         <div class="appendix-heading">
           <h2>Control abuse.<br /><em>Preserve good traffic.</em></h2>
-          <p>Use native product controls first. Distributed rate counters are not exact transactional cutoffs, and bot scores are not claimed without explicit entitlement and visible telemetry.</p>
+          <p>Illustrative discovery baseline: unwanted automation is 18% of peak requests. POC target: reduce abusive requests reaching application code by at least 20% without degrading the agreed customer journey.</p>
         </div>
         <div class="product-grid two-up">
-          <article><b>RATE LIMITING</b><strong>Scope · count · threshold · action</strong><p>Choose a customer-relevant key and observe the transition to a fresh edge decision. Counter propagation can create a short delay.</p><span>429 IS EVIDENCE</span></article>
-          <article><b>BOT CONTROL</b><strong data-live="bot-mode">Checking configured mode…</strong><p>The demo names the control actually provisioned. Plan tier and product entitlement are verified separately.</p><span>1–99 ONLY WHEN ENTITLED + VISIBLE</span></article>
+          <article><b>RATE + BOT SIGNALS</b><strong>Scope · count · score · action</strong><p>Use current dashboard bot state and a narrowly scoped rate rule. The bounded path is <code>/api/demo/burst-control</code>; distributed counter propagation can create a short delay.</p><span>18% BASELINE · ≥20% REDUCTION TARGET</span></article>
+          <article class="burst-card"><b>CONTROLLED LIVE ACTION</b><strong data-burst-summary>Checking rule snapshot…</strong><p data-burst-output>The first responses should reach the Worker; the edge then returns 429 when the current rule is active and aligned.</p><button class="primary compact-control" data-action="run-burst">Run controlled burst</button></article>
         </div>
-        <div class="honesty-note">
-          <strong>Score boundary</strong>
-          <span>Score-based policy is discussed or demonstrated only when Enterprise Bot Management is explicitly entitled and live request telemetry is visible.</span>
+        <div class="hero-actions compact-actions">
+          <a class="secondary as-link" data-dashboard-link="rateLimitingFallback">Open Rate Limiting ↗</a>
+          <a class="secondary as-link" data-dashboard-link="bots">Open Bots ↗</a>
+          <a class="secondary as-link" data-dashboard-link="quakeRoomStateObservability">Open Quake room observability ↗</a>
         </div>
+        <p class="assumption-footnote">Illustrative baseline and target. Replace with customer-approved measurements during discovery.</p>
       </section>
 
       <section class="slide" data-title="API controls" aria-hidden="true">
         <div class="slide-number">12 / APPSEC DEMO · API SHIELD</div>
-        <div class="split api-layout">
+        <div class="split api-proof-layout">
           <div>
             <h2>Know the surface.<br /><em>Then enforce the contract.</em></h2>
-            <p class="lede compact">Endpoint Management is not API Discovery. A schema being present is not proof that non-compliant requests are logged or blocked.</p>
-            <ol class="flow-list">
-              <li>Inventory or add endpoints by host, method, and path</li>
-              <li>Import or learn a supported OpenAPI schema</li>
-              <li>Choose log or block behavior for validation</li>
-              <li>Send invalid traffic and verify fresh Security Events</li>
-            </ol>
-            <a class="text-link" href="/openapi.yaml">Open the public machine-readable schema →</a>
+            <div class="honesty-note">
+              <strong>SUPPORTING CLOUDFLARE APP</strong>
+              <span>JSON evidence viewer renders <code>/api/security-controls</code> and OpenAPI payloads for readable review. It is not a Cloudflare product; it is a helper app used to inspect live JSON safely.</span>
+            </div>
+            <div class="callout-strip api-handoff"><b>LIVE CONTROLS HANDOFF</b><span>GUIDED · OPEN ONLY THE VIEW NEEDED FOR THE QUESTION</span></div>
+            <div class="endpoint-buttons" aria-label="Public-safe API GET operations">
+              <button data-api-path="/api/health">GET /api/health</button>
+              <button data-api-path="/api/security-controls">GET /api/security-controls</button>
+              <button data-api-path="/api/demo/preflight">GET /api/demo/preflight</button>
+              <button data-api-path="/api/demo/request-inspection">GET /api/demo/request-inspection</button>
+              <button data-api-path="/api/demo/profile">GET /api/demo/profile</button>
+              <button data-api-path="/api/demo/burst-control">GET /api/demo/burst-control</button>
+            </div>
+            <div class="hero-actions compact-actions">
+              <a class="secondary as-link" data-dashboard-link="webAssets">API endpoints ↗</a>
+              <a class="secondary as-link" data-dashboard-link="demoWorkerObservability">Worker observability ↗</a>
+              <a class="secondary as-link" href="/openapi.yaml" target="_blank" rel="noopener noreferrer">OpenAPI schema ↗</a>
+              <a class="secondary as-link" data-dashboard-link="jsonViewer">JSON viewer ↗</a>
+              <a class="secondary as-link" data-dashboard-link="jsonProject">JSON project ↗</a>
+              <a class="secondary as-link" data-json-viewer-path="/api/security-controls" data-json-presentation="security" target="_blank" rel="noopener noreferrer">Open controls in viewer ↗</a>
+            </div>
           </div>
-          <aside class="evidence-card">
-            <div class="card-label">OPTIONAL WORKER LAYER</div>
-            <div class="status-line"><span class="status-dot"></span><strong>Use only when native controls do not fit</strong></div>
-            <p>Workers can add custom validation, transformation, or routing. Architecture simulation and code presence are not proof that a native product is entitled or enforcing traffic.</p>
-            <p class="muted" data-live="api-status">Checking endpoint state…</p>
+          <aside class="evidence-card api-console">
+            <div class="request-head"><span data-api-status>READY</span><b data-live="api-status">Checking endpoint state…</b></div>
+            <pre data-api-output>Select a GET operation to inspect its public-safe response.</pre>
+            <a class="secondary as-link" data-api-viewer hidden target="_blank" rel="noopener noreferrer">Open this response in JSON viewer ↗</a>
           </aside>
         </div>
       </section>
@@ -335,56 +417,52 @@
         </div>
         <div class="closing-row">
           <p><strong>Use AppSec for public applications.</strong> Use Access + Tunnel for admin, preview, internal, and partner surfaces that do not need to be broadly exposed.</p>
+          <div class="hero-actions compact-actions">
+            <a class="secondary as-link" data-dashboard-link="zeroTrustHome">Open Zero Trust ↗</a>
+            <a class="secondary as-link" data-dashboard-link="accessApps">Open Access applications ↗</a>
+            <a class="secondary as-link" data-dashboard-link="tunnelConnectors">Open Tunnels/connectors ↗</a>
+          </div>
         </div>
       </section>
 
-      <section class="slide closing-slide" data-title="Two-week POC" aria-hidden="true">
-        <div class="slide-number">14 / TWO-WEEK PROOF OF CONCEPT</div>
-        <div class="adoption-layout">
+      <section class="slide closing-slide" data-title="POC outcomes" aria-hidden="true">
+        <div class="slide-number">14 / TWO-WEEK POC · BEFORE + AFTER</div>
+        <div class="comparison-layout">
           <div>
-            <p class="kicker">ONE HOSTNAME · STAGED ENFORCEMENT</p>
-            <h2>Prove the outcome.<br /><em>Earn the expansion.</em></h2>
-            <p class="lede compact">Run a two-week POC on one representative hostname with an observation baseline, explicit rollback, and named owners.</p>
-            <div class="adoption-ask"><span>THE GATE</span><strong>Evidence · customer impact · ownership · rollback</strong></div>
+            <p class="kicker">ONE HOSTNAME · AGREED TEST WINDOWS</p>
+            <h2>Measure the change.<br /><em>Keep the boundary.</em></h2>
+            <p class="lede compact">The POC either proves or disproves the customer-approved hypothesis.</p>
+            <p class="assumption-footnote">Illustrative starting values and targets. Discovery replaces every number before execution.</p>
           </div>
-          <div class="adoption-plan" aria-label="Two-week Cloudflare application security POC">
-            <ol>
-              <li><span>01</span><div><strong>Baseline</strong><p>Inventory traffic, critical journeys, APIs, and origin exposure.</p></div></li>
-              <li><span>02</span><div><strong>Observe</strong><p>Measure traffic, mitigations, customer experience, latency, and false positives.</p></div></li>
-              <li><span>03</span><div><strong>Enforce narrowly</strong><p>Stage agreed controls with tested rule or version rollback.</p></div></li>
-              <li><span>04</span><div><strong>Decide</strong><p>Review evidence, operational ownership, and the expansion gate.</p></div></li>
-            </ol>
-            <div class="success-criteria">
-              <span>SUCCESS METRICS</span>
-              <ul>
-                <li>Traffic inspected and mitigations by category</li>
-                <li>Reduction in abusive origin requests</li>
-                <li>Investigation time and evidence quality</li>
-                <li>Customer-experience impact</li>
-                <li>Zero critical false positives</li>
-                <li>Rollout ownership and rollback readiness</li>
-              </ul>
-            </div>
+          <div class="comparison-table" aria-label="Illustrative proof of concept before and after targets">
+            <div><span>MEASURE</span><span>ILLUSTRATIVE BEFORE</span><span>POC TARGET</span></div>
+            <div><span>Unwanted automation</span><b>18% of peak</b><b>≥20% fewer abusive requests reach code</b></div>
+            <div><span>Customer-visible slowdowns</span><b>2 per month</b><b>0 during agreed tests</b></div>
+            <div><span>p95 latency</span><b>Clean baseline</b><b>Within 5% of baseline</b></div>
+            <div><span>Evidence correlation</span><b>45 minutes</b><b>Under 10 minutes</b></div>
+            <div><span>Policy change</span><b>3–5 days</b><b>Agreed staged workflow</b></div>
+            <div><span>Rollback</span><b>Unverified</b><b>Under 5 minutes, named owner</b></div>
+            <p>Success also requires no critical false positives on the agreed customer journey and an evidence review with security, application, and infrastructure owners.</p>
           </div>
         </div>
       </section>
 
-      <section class="slide closing-slide" data-title="POC design session" aria-hidden="true">
+      <section class="slide closing-slide" data-title="POC scope and ask" aria-hidden="true">
         <div class="slide-number">15 / THE NEXT MEETING</div>
         <div class="hero-grid">
           <div>
             <p class="kicker">DECIDE THE TECHNICAL SCOPE</p>
             <h2>Design the POC.<br /><em>Name the owners.</em></h2>
-            <p class="lede compact">Schedule a 45-minute POC design session with the application owner, security, DNS or networking, and the executive sponsor.</p>
-            <div class="adoption-ask"><span>THE DIRECT ASK</span><strong>Agree the hostname, evidence, rollback, owners, and success gate</strong></div>
+            <p class="lede compact">Can we schedule a 45-minute POC design session with the application owner, security sponsor, DNS/infrastructure owner, DevOps lead, and AE to replace these assumptions with your real baseline and agree scope, entitlements, rollback, and success metrics?</p>
+            <div class="adoption-ask"><span>THE DIRECT ASK</span><strong>Schedule the 45-minute POC design session with named owners.</strong></div>
           </div>
           <aside class="runbook-card">
             <div class="runbook-top"><span>LEAVE WITH</span><b>ONE-PAGE TEST PLAN</b></div>
             <ol>
-              <li><span>01</span><div><strong>Traffic scope</strong><small>hostname · journeys · APIs</small></div><b>SCOPE</b></li>
-              <li><span>02</span><div><strong>Control sequence</strong><small>observe · tune · enforce</small></div><b>PLAN</b></li>
-              <li><span>03</span><div><strong>Evidence and owners</strong><small>metrics · decisions · rollback</small></div><b>OWN</b></li>
-              <li><span>04</span><div><strong>Entitlements</strong><small>verify exact product and contract state</small></div><b>VERIFY</b></li>
+              <li><span>01</span><div><strong>Representative scope</strong><small>one hostname · critical journeys · selected APIs</small></div><b>SCOPE</b></li>
+              <li><span>02</span><div><strong>Baseline + windows</strong><small>clean p95 · automation · agreed live tests</small></div><b>MEASURE</b></li>
+              <li><span>03</span><div><strong>Control sequence</strong><small>observe · tune · challenge · block</small></div><b>STAGE</b></li>
+              <li><span>04</span><div><strong>Owners + rollback</strong><small>evidence · decisions · under-five-minute recovery</small></div><b>OWN</b></li>
             </ol>
           </aside>
         </div>
@@ -394,12 +472,12 @@
         <div class="slide-number">16 / APPENDIX · EVIDENCE OPERATOR CARD</div>
         <div class="appendix-heading">
           <h2>Configuration is not<br /><em>request evidence.</em></h2>
-          <p>Generate deterministic interview traffic with the private PowerShell helper. The public deck does not send attack or burst traffic.</p>
+          <p>Use the isolated public demo paths to compare a safe response, a WAF decision, and a bounded rate-limiting decision without touching customer traffic.</p>
         </div>
         <div class="product-grid four-up">
           <article><b>BASELINE</b><strong>Safe response</strong><p>A public-safe request reaches Worker code and returns the expected success envelope.</p><span>OBSERVE 200</span></article>
           <article><b>WAF</b><strong>Fresh block</strong><p>A dedicated probe is stopped at the edge and correlated to a Security Event and Ray ID.</p><span>OBSERVE 403</span></article>
-          <article><b>RATE</b><strong>Distributed control</strong><p>A bounded private burst demonstrates a transition from Worker response to edge mitigation.</p><span>OBSERVE 429</span></article>
+          <article><b>RATE</b><strong>Distributed control</strong><p>A bounded burst demonstrates a transition from Worker response to edge mitigation on one isolated path.</p><span>OBSERVE 429</span></article>
           <article><b>COMMAND</b><strong>Windows-safe cURL</strong><p>Copy the currently configured WAF proof command with double quotes for PowerShell and Windows shells.</p><button class="secondary compact-control" type="button" data-action="copy-attack">Copy cURL</button></article>
         </div>
       </section>
@@ -423,24 +501,24 @@
           <p>The public Worker reports a deployment snapshot. Authenticated dashboard evidence remains authoritative for current plan, entitlement, and request telemetry.</p>
         </div>
         <div class="product-grid five-up">
-          <article><b>ZONE PLAN</b><strong>Unknown</strong><p>Verify in the authenticated dashboard or contract record.</p><span>COMMERCIAL STATE</span></article>
-          <article><b>ENTITLEMENT</b><strong>Unknown</strong><p>A visible menu item does not prove product access.</p><span>PRODUCT STATE</span></article>
+          <article><b>ZONE PLAN</b><strong>Verify live</strong><p>Use the authenticated dashboard or contract record.</p><span>COMMERCIAL STATE</span></article>
+          <article><b>ENTITLEMENT</b><strong>Verify live</strong><p>A visible menu item does not prove product access.</p><span>PRODUCT STATE</span></article>
           <article><b>CONFIGURED</b><strong>Snapshot</strong><p>WAF, bot, API, and rate states come from deployment variables.</p><span>NOT LIVE API TRUTH</span></article>
           <article><b>EVIDENCE</b><strong>Fresh request</strong><p>Use the actual response plus Security Events and Ray ID.</p><span>REQUEST STATE</span></article>
           <article><b>POC EXTENSION</b><strong>By requirement</strong><p>Add depth only when a discovered outcome justifies it.</p><span>FUTURE STATE</span></article>
         </div>
       </section>
 
-      <section class="slide appendix-slide" data-title="Q&amp;A handling" aria-hidden="true">
-        <div class="slide-number">19 / APPENDIX · Q&amp;A HANDLING</div>
+      <section class="slide appendix-slide" data-title="POC truth boundary" aria-hidden="true">
+        <div class="slide-number">19 / APPENDIX · POC TRUTH BOUNDARY</div>
         <div class="appendix-heading">
-          <h2>Be precise.<br /><em>Never improvise a fact.</em></h2>
-          <p>Keep the customer’s question intact, answer the verified portion, and capture the exact item that requires authoritative follow-up.</p>
+          <h2>Visible state.<br /><em>Tested outcome.</em></h2>
+          <p>A credible POC separates what is visible now from what the test will measure and what still requires account or contract verification.</p>
         </div>
-        <div class="qa-card">
-          <span>WHEN I AM NOT CERTAIN</span>
-          <blockquote>I do not want to guess. What I can say confidently is ___. I will capture the exact entitlement, limit, SLA, or product behavior and follow up with the authoritative answer.</blockquote>
-          <p>Did that answer the question at the depth you wanted, or is there one dimension I should clarify?</p>
+        <div class="product-grid three-up">
+          <article><b>VISIBLE NOW</b><strong>Public + dashboard state</strong><p>Hostname, edge response, configuration, Worker observability, and sampled Security Events.</p><span>CURRENT EVIDENCE</span></article>
+          <article><b>TEST DURING POC</b><strong>Customer-approved outcomes</strong><p>Abuse reaching code, p95 latency, customer success, investigation time, false positives, and rollback.</p><span>MEASURED RESULT</span></article>
+          <article><b>VERIFY WITH ACCOUNT TEAM</b><strong>Commercial specifics</strong><p>Plan, entitlement, limits, support, SLA, and pricing require authoritative account or contract confirmation.</p><span>NO IMPLIED COMMITMENT</span></article>
         </div>
       </section>
 
@@ -451,6 +529,10 @@
           <p>Use these official sources for current capabilities. Contract-specific limits, support, pricing, and entitlement still require account verification.</p>
         </div>
         <div class="source-grid">
+          <a data-dashboard-link="zoneOverview">Dashboard: Zone Overview ↗</a>
+          <a data-dashboard-link="securityRules">Dashboard: Security Rules ↗</a>
+          <a data-dashboard-link="securityEvents">Dashboard: Security Events ↗</a>
+          <a data-dashboard-link="zeroTrustHome">Dashboard: Zero Trust ↗</a>
           <a href="https://www.cloudflare.com/network/" target="_blank" rel="noopener">Global network ↗</a>
           <a href="https://www.cloudflare.com/plans/free/" target="_blank" rel="noopener">Accessible foundation ↗</a>
           <a href="https://developers.cloudflare.com/fundamentals/manage-domains/add-site/" target="_blank" rel="noopener">Domain onboarding ↗</a>
@@ -484,12 +566,11 @@
         <button class="primary" type="button" data-action="toggle-timer">Start timer</button>
         <button class="secondary" type="button" data-action="run-preflight">Run preflight</button>
         <button class="secondary" type="button" data-action="copy-slide-link">Copy slide link</button>
-        <button class="secondary" type="button" data-action="fullscreen">Fullscreen</button>
-        <a class="secondary as-link" href="/downloads/cloudflare-application-security-speaker-notes.docx" download>Download notes</a>
+        <button class="secondary" type="button" data-action="fullscreen" aria-pressed="false">Full screen</button>
         <button class="danger" type="button" data-action="reset-demo">Reset demo</button>
       </div>
       <div class="preflight-grid" id="preflight-grid" aria-live="polite">
-        <p>Run preflight to verify the Worker, custom domain, TLS, WAF, bots, Turnstile, and API inventory from live evidence.</p>
+        <p>Run preflight to verify the Worker, custom domain, TLS, WAF, bots, Turnstile, API inventory, and rate-limit snapshot from live evidence.</p>
       </div>
       <output class="presenter-output" id="presenter-output" aria-live="polite">Keyboard: ←/→ navigate · P presenter · T timer · F fullscreen · ? shortcuts</output>
     </dialog>
@@ -503,5 +584,6 @@
     </nav>
     <p class="sr-only" id="slide-announcer" aria-live="polite"></p>
     <div class="key-hint"><span>SCROLL TO EXPLORE</span><kbd>↓</kbd></div>
+    </div>
   </body>
 </html>
