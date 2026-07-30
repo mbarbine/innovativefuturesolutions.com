@@ -11,6 +11,7 @@
       "/",
       "/index.html",
       "/api/*",
+      "/cf-demo/*",
       "/openapi.yaml",
       "/llms*.txt",
       "/llms-index.json",

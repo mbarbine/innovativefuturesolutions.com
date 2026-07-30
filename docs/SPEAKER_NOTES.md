@@ -1,1037 +1,889 @@
-# Application Security at the Edge
+# Cloudflare Application Security — Final Speaker Notes
 
-## Solutions Engineer Roleplay Runbook — Private Presenter Edition
+**Aligned to the 15-slide main deck plus Slides 16–20 appendix at `https://innovativefuturesolutions.com`.**
+**Flow:** discovery → Cloudflare network and adoption → zone/DNS/SSL → AppSec proof → focused POC.
+**Operating rule:** answer directly, prove the claim, connect it to the customer, confirm adequacy, and never bluff.
 
-**Production deck:** https://innovativefuturesolutions.com
-**Target duration:** 30-minute customer conversation followed by 15-minute Q&A
-**Stage clock:** 5 minutes discovery · 5 minutes business case · 17 minutes technical proof · 3 minutes POC close
-**Core thesis:** Cloudflare moves security, performance, and control to the first request-processing layer, reducing application exposure while simplifying how teams operate the path to their applications.
+## Preflight
+### Shared-screen sequence
+- Slide deck starts on Slide 1. Pre-open Cloudflare tabs in this exact order: Zone Overview, DNS Records, SSL/TLS Overview, Security Analytics, Security Events, Managed Rules, Custom Rules, Rate Limiting, then optional Bots/API Shield/Access.
+- Use one browser window/profile with notifications disabled. Keep email, chat, billing, member, token, and personal tabs closed.
+- The first live UI proof must be zone → proxied DNS → SSL/TLS. Do not begin with a feature maze.
+### Evidence and safety
+- Keep Invoke-CloudflareDemoTraffic.ps1 on the shared-screen laptop. Five to ten minutes before the call, run: .\Invoke-CloudflareDemoTraffic.ps1 -HostName innovativefuturesolutions.com -Mode All
+- Record one 403 CF-Ray, one 429 result, and the exact timestamps. Leave filtered Events and rule tabs pre-opened.
+- Generate the deterministic WAF and rate-limit evidence before the panel joins. Record a fresh Ray ID and timestamp.
+- Never deploy a broad rule during the interview. Use only the dedicated demonstration path and prebuilt controls.
+- Pair a configuration screen with a request outcome and, when available, a Security Event. Do not convert configuration into request-level proof.
+### Audience involvement
+- Use the planned checkpoint prompts after discovery, the Cloudflare overview, DNS/TLS, the 403/Event proof, and the POC recommendation.
+- When interrupted, answer directly in one sentence, support with evidence, bridge to their environment, then ask whether the answer was adequate.
+- Do not ask a question after every screen. The checkpoints are deliberate; silence and listening matter.
+### Confidence discipline
+- Never guess at limits, SLA terms, pricing, roadmap, contract terms, or a product entitlement.
+- Use the “When unsure” scripts instead of workshopping an answer live.
+- If a feature page is empty, state whether it is unconfigured, unpopulated, or unverified—only when the UI proves that distinction.
+### Hard cut order
+- 1. Optional Worker.
+- 2. Deep Bot UI or deep API Shield UI—keep the one that matches discovery.
+- 3. Live Zero Trust UI.
+- 4. Extra charts in Security Analytics.
+- Never cut discovery recap, DNS/TLS proof, WAF request + event evidence, or the POC ask.
 
-These private notes are intentionally separate from the audience-facing deck. The Innovative Future Solutions application remains the driving visual; this document supplies the discovery, qualification, business framing, customer-language branches, live actions, proof points, portal navigation, POC close, and Q&A depth behind it.
-
-## Before the interview
-
-- Open the production deck and run **Present → Run preflight**. Confirm all eight cards are green.
-- Open Cloudflare **Security → Analytics → Events** in a separate authenticated tab, filtered to the last 30 minutes.
-- Open **Security → WAF → Rate limiting rules** in another tab, with the isolated burst-control rule visible.
-- Confirm the Turnstile widget reaches its ready state.
-- Keep this document open on a second screen or printed. Do not expose it while screen sharing.
-- Use the built-in presenter timer. Start it only when the customer conversation begins; use the stage gates below to recover time.
-- Test the safe API request before testing the WAF rule. This proves the Worker is available before the blocked request.
-- Test the controlled burst only after its previous 10-second mitigation window has expired.
-- Never show API tokens, Turnstile secrets, visitor IPs, cookies, authorization headers, or raw request bodies.
-- If the Cloudflare dashboard is slow, keep moving: the browser already preserves the Ray ID and timestamp needed to find the event later.
-- Keep the current plan boundary explicit: Bot Fight Mode, Endpoint Management, and the custom rate-limit rule are live; Enterprise Bot Management scores and API Discovery are described as the POC extension, not claimed as active.
-
-## Run of show
-
-1. **00:00–01:00 — Lead the call.** Introduce yourself, acknowledge the AE’s unexpected absence, frame the customer outcome, and ask permission to begin with discovery.
-2. **01:00–05:00 — Discover and qualify.** Ask three open questions, listen, reflect the answer, and choose one primary business outcome.
-3. **05:00–10:00 — Build the business case.** Translate the discovered pain into availability, loss avoidance, engineering velocity, consolidation, and evidence—not a feature list.
-4. **10:00–27:00 — Prove the architecture.** Use the live deck: Worker, hostname, TLS, WAF, 200→403, Security Event, bot control, Turnstile, Endpoint Management, and 200→429 burst control.
-5. **27:00–30:00 — Earn the next step.** Recap in the customer’s words, propose a tightly scoped POC with measurable success criteria, confirm stakeholders, and ask for the design session.
-6. **30:00–45:00 — Q&A.** Answer directly, distinguish live evidence from Enterprise extensions, then bridge each answer back to the customer’s stated outcome.
-
----
-
-# Stage 1 — Lead the call and run discovery
-
-**Clock:** 00:00–05:00
-**Screen:** Keep Slide 01 visible. Do not advance while the customer is speaking.
-**Goal:** Establish executive presence, uncover one costly problem, identify a technical constraint, and define a measurable next step.
-
-## Exact opening
-
-“Thank you for making the time. I’m Michael, the Solutions Engineer supporting this conversation. Our AE is unexpectedly unavailable, so I’ll make sure we still use the time well. I can cover enough of the business context to keep us moving, and I’ll capture anything commercial that needs a precise follow-up.”
-
-“My proposal is to spend five minutes understanding how you expose and protect applications today, five minutes aligning on the business outcome, and then use this live Innovative Future Solutions application to prove the request path. I’ll leave the last few minutes to agree on whether a focused proof of concept is warranted. Does that work for you?”
-
-## Ask these three questions
-
-1. **Current state:** “Walk me through what happens today when a new public application or API goes live—from DNS and onboarding through security policy, observability, and incident response.”
-2. **Pain and impact:** “Where is the cost showing up most: customer-impacting attacks, origin instability, release friction, false positives, tool sprawl, or lack of API visibility—and what happens to the business when that problem occurs?”
-3. **Decision and success:** “If we ran a proof of concept, what would have to be measurably better in 30 days for you to call it successful, and who else would need confidence in the result?”
-
-After each answer, pause. Do not rescue the silence. Reflect one sentence before the next question: “What I heard is ___, and the consequence is ___; have I got that right?”
-
-## Qualification notes to capture
-
-- **Pain:** What is broken, expensive, slow, risky, or politically difficult?
-- **Impact:** Revenue, availability, customer trust, response time, staffing, audit exposure, or delivery velocity.
-- **Urgency:** What event, renewal, launch, incident, audit, or architecture change creates a clock?
-- **Current controls:** CDN, DNS, WAF, bot tooling, API gateway, SIEM, origin allowlisting, identity, and ownership boundaries.
-- **Decision process:** Technical owner, security approver, economic buyer, procurement, and implementation team.
-- **Success metric:** One or two measures that can be observed during a POC.
-- **Constraint:** Change window, DNS authority, compliance, data residency, origin topology, or fear of false positives.
-
-## Persona branches
-
-### If the CISO leads
-
-Ask: “Which application-security risk is least visible today?” Then probe false positives, shadow APIs, incident evidence, control consistency, auditability, and business interruption. Frame value as reduced exposure, faster decisions, provable enforcement, and fewer disconnected control planes.
-
-### If the Head of Infrastructure leads
-
-Ask: “What does the origin have to absorb today that you wish it never saw?” Then probe DDoS, TLS operations, latency, multi-cloud routing, egress, capacity planning, origin bypass, and rollback. Frame value as a globally distributed first hop, origin preservation, simpler routing, and staged migration.
-
-### If the DevOps or application lead leads
-
-Ask: “Where does security create deployment friction for your team?” Then probe policy ownership, CI/CD, rule tuning, exception handling, debugging, schema drift, login abuse, and observability. Frame value as security outside application code, programmable integration, safer defaults, and shared evidence.
-
-## What a strong discovery sounds like
-
-“You’ve told me the immediate problem is credential abuse against login, but the larger cost is that three teams use different controls and no one can correlate a block to an application release. I’ll prioritize three things in the demo: stopping abuse before code, preserving a traceable decision, and showing how the same edge layer can cover the API surface. I’ll leave advanced platform services for Q&A unless they help that outcome.”
-
-## Time recovery
-
-If answers consume the full five minutes, that is a successful discovery—not a failure. Compress the business case to three minutes and skip Slides 12–14. Never speed through the customer’s answer to protect slide count.
+## Live run
 
 ---
 
-# Stage 2 — Business case and strategic vision
+## Cue 1/27 — Slide 1 — 00:00–00:45
+### Lead the call confidently—and set a customer outcome
+**Shared screen:** Show Slide 1 on innovativefuturesolutions.com. Stay on the slide. Do not open Cloudflare yet.
 
-**Clock:** 05:00–10:00
-**Screen:** Remain on Slide 01; use the live status ribbon as the visual proof that one platform is already serving and protecting the application.
-**Goal:** Make the “why” explicit before demonstrating the “what.”
+### Say
+Thanks for making the time today. I’m Michael, your Cloudflare Solutions Engineer for this deep dive.
 
-## Reflect before presenting
+Our Account Executive was unexpectedly pulled away, so I’ll cover the first-pass discovery and technical walkthrough. I’ll capture anything commercial that needs a precise follow-up.
 
-“Based on what you shared, I’m going to anchor this around **[their outcome]**. The technical symptoms are **[their symptoms]**, but the business issue is **[impact]**. The architecture I want to test is whether placing one programmable enforcement layer before the application can reduce that impact without making delivery slower.”
+I’ll use innovativefuturesolutions.com to test whether Cloudflare can improve one critical public request path, then briefly connect that to Zero Trust for private administrative surfaces. The goal is not to show everything; it is to earn—or disqualify—a focused proof of concept.
 
-## Five business-value moves
+### Do now
+- Camera first; slide second.
+- Acknowledge the AE once and move on.
+- End with a calm pause before advancing.
 
-1. **Protect revenue and trust.** Stop abusive or malicious traffic before it consumes application capacity or reaches fragile code paths.
-2. **Reduce operational drag.** Apply DNS, TLS, DDoS, WAF, bot, API, and edge-compute controls on the same request path instead of stitching together serial appliances.
-3. **Increase engineering velocity.** Keep common controls outside each codebase while preserving application-specific policy and programmable escape hatches.
-4. **Improve evidence.** Correlate the decision, action, timestamp, path, and Ray ID so security and application teams investigate the same event.
-5. **Migrate incrementally.** Put Cloudflare in front first; move stateless logic or selected workloads only where the economics and architecture support it.
+### Ask / check the room
+“Does that outcome and scope work for everyone?”
 
-## Strategic framing
+**Transition:** “Let me show you how I’ll use the 30 minutes—and please interrupt when something matters to your environment.”
 
-“This is not a WAF replacement exercise in isolation. It is a request-path decision. Cloudflare’s network becomes the first place where the organization can encrypt, absorb, classify, enforce, observe, and—when useful—execute code. The business value comes from consolidating those decisions on one globally distributed platform while reducing what the origin must handle.”
+**Truth boundary:** Take ownership; do not apologize repeatedly or mention the interview.
 
-“The proof I’m about to show is intentionally small and deterministic. The customer version of this would start in log or challenge mode, use your normal traffic to establish a baseline, and move to block only after the application owner accepts the false-positive rate.”
+**If it fails:** If interrupted immediately: “That is useful context. I’ll answer the part I can answer precisely, then use it to tune the rest of the walkthrough.”
 
-## Map the story to the discovered priority
-
-- **If availability is primary:** Emphasize DDoS, edge termination, rate limiting, and less origin work.
-- **If account abuse is primary:** Emphasize bot signals, Turnstile, login-specific rate limiting, and step-up friction.
-- **If API risk is primary:** Emphasize Endpoint Management, intended schema, discovery gap, and per-endpoint policy.
-- **If tool sprawl is primary:** Emphasize one request path, shared policy, shared evidence, and fewer handoffs.
-- **If delivery speed is primary:** Emphasize Workers, Web APIs, bindings, staged migration, and policy outside the app.
-
-## Transition into proof
-
-“Rather than ask you to accept that architecture as a diagram, I built the presentation as the application. Every control in the core path acts on the same hostname you’re looking at. Let’s start with onboarding and then prove two decisions at the edge: a 403 for an attack and a 429 for abusive request volume.”
+**Official references:** [Cloudflare dashboard](https://dash.cloudflare.com/)
 
 ---
 
-# Stage 3 — Technical demo clock and decision points
+## Cue 2/27 — Slide 2 — 00:45–01:30
+### Set expectations and invite interruption
+**Shared screen:** Advance to Slide 2. Stay on the slide.
 
-**Clock:** 10:00–27:00
-**Goal:** Prove the request path. Use the detailed slide notes that follow for exact language, questions, and recovery.
+### Say
+I’ll spend five minutes on your priorities, about five minutes on what makes Cloudflare different and how onboarding works, then move into the live portal.
 
-## Core timing map
+The live sequence is deliberate: correct zone, proxied DNS, SSL/TLS, traffic visibility, and then enforcement. I’ll reserve the final minutes for POC scope, success metrics, rollback, owners, and the next meeting.
 
-1. **Slide 01 / Preflight — 45 seconds:** Run eight checks; set the evidence standard.
-2. **Slide 02 / Worker — 75 seconds:** Explain onboarding choice and prove runtime execution.
-3. **Slide 03 / Custom domain — 60 seconds:** Explain DNS, proxying, custom domain, and rollback.
-4. **Slide 04 / HTTPS — 45 seconds:** Show TLS and security headers.
-5. **Slide 05 / WAF rule — 75 seconds:** Explain the narrow expression and rollout method.
-6. **Slide 06 / 200→403 — 90 seconds:** Run baseline then attack; capture Ray ID.
-7. **Slide 07 / Security Event — 90 seconds:** Correlate the decision in the dashboard.
-8. **Slide 08 / Bots — 75 seconds:** Show the real Free-plan control; explain the Enterprise score extension.
-9. **Slide 09 / Turnstile — 90 seconds:** Complete widget and server-side Siteverify.
-10. **Slide 10 / API + 200→429 — 120 seconds:** Run a normal operation, then the bounded burst.
-11. **Slide 11 / Edge architecture — 60 seconds:** Synthesize the path using the customer’s priority.
+Please interrupt me. After each major proof, I’ll confirm that I answered the question at the depth you need.
 
-Slides 12–14 are optional technical depth. Use them only if a stakeholder asks about state, asynchronous work, AI, AWS coexistence, or migration. Skipping them demonstrates control of time.
+### Do now
+- Point briefly to the four stages.
+- Do not read every bullet on the slide.
 
-## Onboarding story—what was actually done
+### Ask / check the room
+“Is there anything you want me to make sure we cover before I begin discovery?”
 
-1. Added the zone to Cloudflare and activated Cloudflare as authoritative DNS.
-2. Built a TypeScript Worker that serves the deck, API endpoints, security headers, and Turnstile verification.
-3. Attached Worker Custom Domains for the apex and `www`; Cloudflare coordinates DNS routing and certificate issuance.
-4. Added a narrow zone-level WAF custom rule for the lab path.
-5. Enabled Bot Fight Mode, the control available on this Free-plan zone.
-6. Created a Turnstile widget and stored the secret only as a Worker secret; the browser receives only the site key.
-7. Added the declared API operations to API Shield Endpoint Management and published OpenAPI 3.1 documentation.
-8. Added one zone-level rate-limiting rule scoped only to `/api/demo/burst-control`: five requests per 10 seconds, 10-second block.
+**Transition:** “Before I show any product, I need three signals from you.”
 
-## Why this method
+**Truth boundary:** Questions are welcome, but protect the 27-minute close gate.
 
-“The Worker is the origin for this demo because it makes every proof deterministic: if a request receives the Worker’s JSON, code ran; if it receives the WAF 403 or rate-limit 429, the edge acted first. For a customer with an existing origin, I would usually start by proxying the current application, preserve the system of record, and introduce controls in observe-first stages.”
-
-## The evidence hierarchy
-
-1. **Browser outcome:** User-visible 200, 403, or 429.
-2. **Response metadata:** Ray ID, request ID, TLS, colo, and security headers.
-3. **Worker output:** Proves application code executed.
-4. **Cloudflare event:** Proves which edge rule acted and why.
-5. **Control configuration:** Proves the intended policy exists and is enabled.
-
-Never present a configuration screenshot as proof of enforcement. Pair policy with an actual request and event.
+**If it fails:** If the panel says “just show us the product,” respond: “I will. I need three signals first so I show the controls that matter to your business.”
 
 ---
 
-# Stage 4 — POC close and next-step ask
+## Cue 3/27 — Slide 3 — 01:30–02:30
+### Question 1 — critical business journey
+**Shared screen:** Advance to Slide 3. Ask one question, then stop talking.
 
-**Clock:** 27:00–30:00
-**Screen:** Slide 11. If needed, return to Slide 01 for the live status ribbon.
-**Goal:** Convert technical interest into a qualified, mutual next step.
+### Say
+Which public application, API, or customer journey creates the greatest business risk if it becomes unavailable, abused, or slow?
 
-## Recap in the customer’s words
+And what is the business consequence when that happens — lost revenue, customer trust, an SLA impact, operational cost, or something else?
 
-“You started by telling me **[pain]** is creating **[impact]**. In this demo we put the control before the application, proved a content-based block, preserved the event evidence, verified a human at login without creating a session, inventoried the API surface, and stopped abusive request volume before Worker code. The question is whether that same pattern can improve **[their success metric]** on one of your applications.”
+### Do now
+- Pause. Let more than one stakeholder answer.
+- Capture only 3–6 words in the Discovery drawer: the application or journey.
+- Reflect one phrase back: “So the critical path is ___.”
 
-## Proposed POC scope
+### Ask / check the room
+After the answer: “So the critical path is ___—have I got that right?”
 
-- One representative production-like hostname and two to five high-value API or login endpoints.
-- Their current origin remains in place; Cloudflare is introduced with an agreed rollback method.
-- Baseline traffic and false-positive review before terminating actions.
-- DDoS/TLS, one managed or custom WAF use case, bot or Turnstile protection, API inventory, and one endpoint-specific rate limit.
-- Log and Security Event access for both security and application owners.
-- Optional Enterprise extensions only if entitled: Bot Management scores, API Discovery, schema validation enforcement, mTLS, advanced rate limiting, Logpush, or SIEM integration.
+**Transition:** “That gives me the business consequence. Now I want to understand where the current operating model breaks down.”
 
-## Measurable success criteria
+**Truth boundary:** Listen. Do not solve during discovery.
 
-- Selected traffic is correctly proxied through Cloudflare with no critical functional regressions.
-- A safe baseline remains available while an agreed malicious request is blocked before origin.
-- False positives remain within the customer-agreed threshold and exceptions are auditable.
-- Login abuse is reduced without unacceptable challenge rates for legitimate users.
-- The intended API inventory is reconciled against observed traffic; unknown endpoints are triaged.
-- A defined burst condition produces a controlled edge response without origin saturation.
-- Security and application teams can correlate a request, action, timestamp, path, and Ray ID.
-- Latency, error rate, origin request volume, and operational ownership are measured before and after.
-
-## Exact ask
-
-“If those outcomes match what you need, can we schedule a 45-minute POC design session with the application owner, security, networking or DNS, and the executive sponsor? I’ll bring a one-page test plan with the traffic scope, rollback, success metrics, data requirements, and Enterprise entitlements. Our AE can then align the commercial path to the technical scope we agree.”
-
-Then stop. Let the customer answer.
-
-## If they are not ready
-
-Ask: “What uncertainty would we have to remove before a POC is worth your team’s time?” Classify the response as technical fit, risk, priority, process, cost, or sponsorship. Do not argue; turn it into a testable next step.
+**If it fails:** If no one answers: “For today, I’ll assume the public web application and API are customer-facing revenue paths.”
 
 ---
 
-# Portal navigation drill
+## Cue 4/27 — Slide 3 — 02:30–03:35
+### Question 2 — current pain and operating gap
+**Shared screen:** Stay on Slide 3.
 
-Use the authenticated dashboard only after the deck has produced a request worth investigating. This preserves narrative momentum and demonstrates portal comfort in context.
+### Say
+How are you protecting that path today, and where does the process break down?
 
-## Navigation sequence
+Is the problem attack visibility, false positives, bot or credential abuse, response time, origin cost, release friction, tool sprawl — or something I have not named?
 
-1. **Workers & Pages → innovative-future-solutions-security-demo:** Show the current deployment, routes/custom domains, observability, and secrets names only. Never reveal secret values.
-2. **Web Assets / innovativefuturesolutions.com → Security → Analytics → Events:** Filter by hostname, path `/attack-lab`, action Block, and the recent time window. Match the Ray ID when available.
-3. **Security → WAF → Custom rules:** Show the narrow XSS lab expression, enabled state, and action.
-4. **Security → WAF → Rate limiting rules:** Show the isolated `/api/demo/burst-control` rule, threshold, period, and mitigation timeout.
-5. **Security → Bots:** Show Bot Fight Mode and explain what changes with Enterprise Bot Management.
-6. **Turnstile at account level:** Show the widget hostname configuration and analytics; do not expose the secret key.
-7. **Security → API Shield / Web Assets → Endpoints:** Show the eight saved operations and explain why Worker-backed origin metrics may not populate.
+### Do now
+- Pause again.
+- Capture the pain in the Discovery drawer.
+- Ask one follow-up only: “Who feels that pain most today — security, infrastructure, application teams, or the business?”
 
-## Portal narration formula
+### Ask / check the room
+After the answer: “Is that primarily a security-team pain, an application-team pain, or both?”
 
-For every screen say: **where we are, what problem the product solves, what is configured here, what evidence it produces, and what plan boundary applies.** Avoid a dashboard tour disconnected from the customer’s problem.
+**Transition:** “Last question: what evidence would make a POC credible?”
 
----
+**Truth boundary:** A feature request is not a business impact until you connect it to revenue, trust, cost, availability, staffing, audit, or velocity.
 
-# Enterprise boundary and honesty matrix
-
-## Live on this zone
-
-- Cloudflare Worker and custom domains.
-- Managed HTTPS, HSTS, CSP, and response security headers.
-- One narrow WAF custom rule.
-- Bot Fight Mode, explicitly identified as the Free-plan bot control.
-- Turnstile with server-side Siteverify.
-- API Shield Endpoint Management with eight saved operations and OpenAPI documentation.
-- One path-scoped rate-limiting rule with a 10-second period.
-- Security Events and Ray ID correlation in the authenticated dashboard.
-
-## Enterprise extensions to describe, not claim
-
-- Bot Management per-request scores from 1–99, score-based rules, and deeper bot analytics.
-- API Discovery from machine-learning and session-identifier signals.
-- Advanced API protections such as production schema validation, mTLS, JWT validation, sequence analytics or mitigation, and sensitive-data detection where licensed.
-- Advanced Rate Limiting characteristics, longer windows, complexity-based budgets, and broader account-level patterns where entitled.
-- Logpush or security integrations for SIEM, long-term analytics, and customer workflows.
-- Enterprise support, contract-specific SLAs, and account-level policy design.
-
-## Phrases to avoid
-
-- Do not say “all bots are blocked.” Say “the configured control detects and challenges malicious automation; legitimate automation and false positives require policy design.”
-- Do not say “API Discovery is running” on this Free-plan zone. Say “Endpoint Management is live; Enterprise API Discovery is the next extension.”
-- Do not say “rate limiting allows exactly five requests.” Counters are distributed and enforcement may lag by a few seconds.
-- Do not say “the origin can never be reached.” Explain origin locking, authenticated origin pulls, tunnels, IP allowlisting, or network design as a separate control.
-- Do not say “zero latency.” Say “the edge can reduce network distance and offload origin work; measure the customer path.”
-- Do not claim a cost percentage without the customer’s traffic, egress, support, and tool-spend baseline.
-- Do not say “Cloudflare replaces AWS.” Say “move the first-hop controls and latency-sensitive logic; keep or migrate state deliberately.”
+**If it fails:** If the answer is broad: “Which one of those creates the most expensive or frequent operational consequence?”
 
 ---
 
-# Slide 01 — Secure the app, one layer at a time
+## Cue 5/27 — Slide 3 — 03:35–05:00
+### Question 3 — success criteria and recap
+**Shared screen:** Stay on Slide 3. End discovery with a concise recap.
 
-**Timing:** 45–60 seconds
-**Objective:** Establish that this is a working application and a structured security demonstration, not a static product overview.
+### Say
+Two weeks from now, what evidence would make you comfortable expanding the rollout?
 
-## Say
+Would it be fewer abusive requests reaching origin, faster investigation, zero critical false positives, lower infrastructure cost, fewer point tools, or another measurable result?
 
-“I’m going to secure one small application in layers. The application is this presentation itself: a TypeScript Worker, a custom domain, public-safe APIs, and a Turnstile-protected login demonstration. I’ll prove HTTPS, block an obvious XSS probe at the WAF, correlate the block with a Security Event, add bot and human-verification controls, inspect the API surface, stop a bounded burst with rate limiting, and finish by explaining why the edge changes the application’s risk boundary.”
+Let me reflect that back: the critical path is {{journey}}, the current pain is {{pain}}, and a credible win is {{success}}. Have I captured that correctly?
 
-“The green status ribbon is live. It is populated from the Worker and a deployment-control snapshot. When I use an architecture simulation later, I will label it as a simulation rather than pretend that every Cloudflare product is provisioned here.”
+### Do now
+- Capture the success metric.
+- If they name a buying or approval gate, capture it as the POC gate.
+- Do not solve the problem during discovery.
 
-## Do
+### Ask / check the room
+“Have I captured the success standard correctly?”
 
-1. Open **Present**.
-2. Start the timer.
-3. Select **Run preflight**.
-4. Pause until the eight evidence cards finish animating.
+**Transition:** “That is why this is a business problem before it is a WAF configuration problem.”
 
-## Proof to point at
+**Truth boundary:** Use the two-week POC shown on Slide 14. Do not say 30 days.
 
-- Current Worker version and edge colo.
-- Custom hostname observed by the Worker.
-- Negotiated TLS version.
-- WAF, Bot Fight Mode, Turnstile, API inventory, and rate-limit configuration status.
-
-## Likely question
-
-**How do I know this is not hardcoded?**
-
-The preflight is returned by `/api/demo/preflight` on the live Worker. It combines request-specific Cloudflare properties—such as hostname, colo, protocol, and TLS—with control metadata stored as Worker secrets during deployment. The safe API and WAF steps then exercise the live request path independently.
-
-## Transition
-
-“First, the compute layer: what actually runs when this domain receives a request?”
-
-## Recovery
-
-If preflight fails, say: “The readiness call is unavailable, so I’ll validate each layer independently as we proceed.” Continue to the live Worker response on the next slide.
+**If it fails:** Working assumptions: public web app + API; better attack visibility; controlled false positives; security changes cannot slow releases; admin paths should not remain public.
 
 ---
 
-# Slide 02 — Deploy an application
+## Cue 6/27 — Slide 4 — 05:00–06:40
+### Translate the security problem into business impact
+**Shared screen:** Advance to Slide 4. Stay on the slide.
 
-**Timing:** 45–60 seconds
-**Objective:** Explain Workers accurately and prove this Worker is executing.
+### Say
+Based on what you said, the objective is not simply to block bad traffic. It is to protect {{journey}}, reduce {{pain}}, and prove {{success}}.
 
-## Say
+An attack becomes a business problem through downtime, fraud, customer friction, cloud cost, incident workload, or delayed releases. Security needs assurance, infrastructure needs resilience, and application teams need controls that do not become emergency code changes.
 
-“Cloudflare Workers executes code in V8 isolates rather than assigning a virtual machine or language runtime process to every function. An isolate is a lightweight, isolated JavaScript context inside an already-running V8 runtime. That model reduces per-application startup and memory overhead.”
+The control therefore has to be inline, observable, tunable, and safe to roll back.
 
-“Workers execute across Cloudflare’s global network and expose Web Standard APIs such as `Request`, `Response`, `URL`, `fetch`, streams, and Web Crypto. The design implication is important: code should treat memory as ephemeral. A Worker instance can be reused, but mutable global state is not the system of record.”
+### Do now
+- Use the customer’s exact words once.
+- Do not introduce product features until the last sentence.
 
-“This response is live. The service name, version, colo, TLS version, and protocol all came from the request being handled now.”
+**Transition:** “That makes the placement of the control strategically important.”
 
-## Do
+**Truth boundary:** No unsupported ROI percentages or universal cost-saving claims.
 
-Select **Refresh live status** and point to the response card.
+**If it fails:** If discovery was thin, use: “For this demo, I’ll optimize for availability, attack visibility, controlled false positives, and reduced origin load.”
 
-## Proof to point at
-
-- `status: healthy`
-- Worker service name and version
-- The responding Cloudflare colo
-- TLS and HTTP protocol
-
-## Likely question
-
-**Why V8 isolates instead of containers?**
-
-An isolate is much lighter than a dedicated process or VM. Many isolated applications can share the V8 runtime while keeping their memory separate. That supports rapid startup and high density. The trade-off is a more constrained runtime and a stronger need to use supported Web APIs, bindings, and external state primitives deliberately.
-
-## Transition
-
-“Now I need the application to own a real hostname, not just a generated deployment URL.”
-
-## Recovery
-
-If the health card is unavailable, open `/api/health` directly. If that also fails, use the already-loaded static asset as evidence that the custom domain is resolving, but clearly state that live Worker health is degraded.
+**Official references:** [Cloudflare WAF overview](https://developers.cloudflare.com/waf/)
 
 ---
 
-# Slide 03 — Configure the custom domain
+## Cue 7/27 — Slide 5 — 06:40–07:35
+### Why Cloudflare — every service, every location, one pass
+**Shared screen:** Advance to Slide 5. Stay on the slide.
 
-**Timing:** 35–45 seconds
-**Objective:** Show how DNS, the custom hostname, and Worker routing combine.
+### Say
+Cloudflare’s differentiator starts with the network, not with one WAF feature. Cloudflare runs its service stack throughout the global network, and single-pass inspection lets security and performance decisions happen near the request source instead of backhauling traffic through a chain of separate products.
 
-## Say
+That same origin-independent request path can apply security, performance, visibility, and programmable logic before traffic reaches the origin. The operating model can stay consistent across AWS, Azure, Google Cloud, SaaS, and private infrastructure—valuable when extra hops, policy drift, and tool sprawl are the real problem.
 
-“The apex and `www` hostnames are Worker Custom Domains. Cloudflare coordinates the DNS and certificate lifecycle and routes the hostname directly to the Worker. For this application, the Worker is the origin; there is no separate web server behind it.”
+### Do now
+- Point to Security, Performance, Visibility, and Programmability.
+- Use three anchors: every service in every data center; single-pass inspection; origin-independent control.
+- Do not quote city, latency, traffic, or capacity numbers unless the panel asks; use the current official network page.
 
-“This is more than a vanity URL. Putting the hostname on Cloudflare’s network makes the edge the first processing layer for TLS, DDoS protection, WAF policy, bot signals, API visibility, and Worker routing.”
+### Ask / check the room
+“Which matters most here: multi-cloud consistency, origin protection, lower latency, or operational consolidation?”
 
-## Do
+**Transition:** “That architecture is useful only if a customer can start safely without a large replatforming project.”
 
-Point from Public DNS to Nearest Cloudflare Location to Application. Mention that preflight verified the actual request host.
+**Truth boundary:** The network architecture does not mean every product is entitled or that every customer workload should move to Cloudflare.
 
-## Proof to point at
+**If it fails:** If challenged on differentiation: “Let me prove the operating model rather than debate a feature matrix: one onboarding path, one request path, and shared enforcement evidence.”
 
-- Browser address bar uses `innovativefuturesolutions.com`.
-- Preflight custom-domain card reports the same host.
-- Both apex and `www` are configured as custom domains in Worker routing.
-
-## Likely question
-
-**What happens if there is also an existing origin?**
-
-Workers can sit in front of an existing origin and selectively proxy, transform, authenticate, or cache requests. Migration does not require moving all state immediately. A common first step is moving stateless request logic and security policy to the edge while retaining the current system of record.
-
-## Transition
-
-“Before any application logic, the browser and Cloudflare establish an encrypted connection.”
-
-## Recovery
-
-If `www` is not being demonstrated, avoid claiming both hostnames from browser evidence alone. State that the apex is the active demonstration hostname and the configured control plane also includes `www`.
+**Official references:** [Cloudflare global network](https://www.cloudflare.com/network/)
 
 ---
 
-# Slide 04 — Enable HTTPS
+## Cue 8/27 — Slide 5 — 07:35–08:20
+### Why Cloudflare — a low-friction path from foundation to Enterprise
+**Shared screen:** Advance to Slide 5. Stay on the slide.
 
-**Timing:** 35–45 seconds
-**Objective:** Explain where TLS terminates and prove the negotiated connection.
+### Say
+Cloudflare’s mission to help build a better Internet shows up in the starting point. A team can begin self-service—without installing an appliance or rewriting the application—and establish DNS, Universal SSL, CDN, automatic DDoS protection, and a managed WAF baseline before a major rearchitecture.
 
-## Say
+Enterprise adds deeper controls, policy flexibility, support, and contract-specific commitments, but the customer does not rebuild the front door to expand. Today I’ll show the live state rather than infer capabilities from the plan name.
 
-“Cloudflare terminates TLS close to the user, presents the managed certificate, and applies request policy before Worker execution. The live request negotiated the TLS version shown here.”
+Application Security protects the public customer path; Zero Trust is the complementary motion for private and administrative paths.
 
-“I also return HSTS, a restrictive Content Security Policy, `X-Content-Type-Options`, frame protections, a Permissions Policy, and a strict referrer policy. TLS protects the connection; the response headers reduce browser-side attack surface.”
+### Do now
+- Separate the accessible foundation from Enterprise depth.
+- Say “start small, become inline safely, measure, then expand.”
+- Do not imply the plan name alone proves entitlement, configuration, or enforcement.
 
-## Do
+**Transition:** “Here is the exact onboarding method I used for this environment.”
 
-Point to HTTPS, the live TLS value, and HSTS. If asked, open DevTools or the response headers after the main flow rather than breaking the presentation.
+**Truth boundary:** Foundational availability does not mean every Enterprise capability exists on every tier or is enabled in this account.
 
-## Proof to point at
+**If it fails:** If challenged on consolidation: “I am not assuming every existing tool disappears. The POC measures which controls and workflows Cloudflare can credibly consolidate in your environment.”
 
-- HTTPS scheme and browser lock state.
-- Live TLS value from `request.cf`.
-- HSTS and CSP present on production responses.
-
-## Likely question
-
-**Does TLS at the edge mean origin traffic is unencrypted?**
-
-Not inherently. In a conventional proxied architecture, Cloudflare can establish a separate encrypted connection to the origin. In this demo the Worker serves the application directly, so there is no second web-origin hop for the deck and APIs.
-
-## Transition
-
-“The transport is protected. Now I’ll stop a request based on its application-layer content.”
-
-## Recovery
-
-If the live TLS value is `unknown`, rely on the HTTPS connection and response headers, and state that the runtime did not expose negotiation metadata for that request.
+**Official references:** [Cloudflare plans](https://www.cloudflare.com/plans/) · [Universal SSL](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/enable-universal-ssl/) · [DDoS protection](https://developers.cloudflare.com/ddos-protection/)
 
 ---
 
-# Slide 05 — Add a WAF rule
+## Cue 9/27 — Slide 6 — 08:20–09:00
+### Onboarding — establish the Cloudflare control point
+**Shared screen:** Advance to Slide 6. Stay on the slide.
 
-**Timing:** 50–60 seconds
-**Objective:** Explain a narrow, auditable custom rule and where it runs.
+### Say
+I used the standard full-zone reverse-proxy motion: add innovativefuturesolutions.com, review the imported DNS records, update authoritative nameservers, proxy the relevant web records, and validate SSL/TLS.
 
-## Say
+That can introduce DNS, TLS, DDoS protection, visibility, and edge policy without rewriting the application. A customer can begin with one hostname, observe normal traffic, and expand only after the application owner accepts the behavior.
 
-“The custom rule is intentionally narrow. It matches only `/attack-lab` when the query contains `attack=xss`, then takes the terminating Block action.”
+### Do now
+- Use the four numbered steps on Slide 6.
+- Name full-zone onboarding as this demo’s method—not the only possible method.
 
-“Custom rules run in Cloudflare’s firewall custom-rule phase. A terminating action stops the request before later application processing. That is the key architectural point: the malicious request does not have to reach application code for the application to reject it.”
+**Transition:** “The adoption model also needs a safe rollback path.”
 
-“In production I would start with logging when a rule might affect legitimate traffic, examine events and false positives, then move to blocking. Here the path and signal are purpose-built for a deterministic interview demonstration.”
+**Truth boundary:** Plan tier, product entitlement, configured state, and request evidence are four different facts.
 
-## Do
+**If it fails:** If asked about partial or CNAME onboarding: “The exact method depends on DNS ownership and change constraints. This environment uses a standard full-zone motion; the POC design session would select the supported model that fits your architecture.”
 
-Point to the readable IF/AND/BLOCK expression and the truncated rule identifier.
-
-## Proof to point at
-
-- Control snapshot says WAF status is active.
-- Public output reveals only a truncated rule ID.
-- The exact demonstration target is documented by the Worker.
-
-## Likely question
-
-**Why not use a broad rule that blocks all script tags?**
-
-Broad signatures create false positives and are harder to reason about. A good control has an explicit threat model, a narrow scope, observable outcomes, and a rollback path. Managed rules cover broad known attack classes; custom rules should encode application-specific intent.
-
-## Transition
-
-“Configuration is not proof. I’ll send two requests through the same edge.”
-
-## Recovery
-
-If the control snapshot is unavailable, show the WAF expression, but state that the next live 403 is the decisive proof.
+**Official references:** [Onboard a domain](https://developers.cloudflare.com/fundamentals/manage-domains/add-site/) · [Proxy status](https://developers.cloudflare.com/dns/proxy-status/) · [Universal SSL](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/)
 
 ---
 
-# Slide 06 — Show the request being blocked
+## Cue 10/27 — Slide 6 — 09:00–09:30
+### Onboarding — stage changes and roll back narrowly
+**Shared screen:** Advance to Slide 6. Stay on the slide.
 
-**Timing:** 75–90 seconds
-**Objective:** Produce the strongest live proof: same application, safe request allowed, attack request blocked before Worker execution.
+### Say
+The rollback model is layered. A bad security rule is disabled first. A Worker version or route can be reverted independently. DNS or proxy changes are the broader contingency—not the first response to a tuning problem.
 
-## Say
+For private origins or admin-only services, the expansion is Tunnel plus Access rather than leaving those services directly exposed.
 
-“First I establish a baseline. This safe API request should return 200 and identify the Worker as the execution layer.”
+### Do now
+- Emphasize smallest-change rollback.
+- Mention Tunnel and Access only as the private-path expansion.
 
-“Now I send the XSS probe. The payload remains URL-encoded and is never rendered or executed. The WAF recognizes the demonstration signal and returns 403.”
+**Transition:** “That gives us two related paths: public Application Security and private Zero Trust.”
 
-“Notice the difference in the evidence console. The safe request says Worker executed. The blocked request says Cloudflare WAF custom rule and Worker not invoked. The Ray ID is the correlation handle for the next step.”
+**Truth boundary:** Do not describe proxy-off as the routine rollback for a bad WAF rule.
 
-## Do
+**If it fails:** If asked about partial or CNAME onboarding: “The exact method depends on DNS ownership and change constraints. This environment uses a standard full-zone motion; the POC design session would select the supported model that fits your architecture.”
 
-1. Select **Run safe API request**; wait for `200` and Baseline complete.
-2. Select **Send XSS probe**; wait for `BLOCKED`, `403`, and a Ray ID.
-3. Optionally select **Copy cURL** if the interviewer wants the exact reproducible request.
-4. Open the event record.
-
-## Proof to point at
-
-- Baseline: HTTP 200, JSON content, Ray/request ID, Worker executed.
-- Attack: HTTP 403, WAF layer, Ray ID, Worker not invoked.
-- The browser preserves the Ray ID and observation time in session storage only.
-
-## Likely question
-
-**How can you prove the Worker was not invoked for the blocked request?**
-
-The response is Cloudflare’s WAF block page rather than the Worker’s standard JSON envelope and security headers. The request also appears as a WAF Custom rules event. The Worker route has no handler for `/attack-lab`; an allowed request would fall through to a static-asset 404 instead of producing this WAF 403.
-
-## Transition
-
-“A block without investigation evidence is operationally incomplete, so I’ll follow the Ray ID.”
-
-## Recovery
-
-If the attack returns anything other than 403, do not call it blocked. Verify the exact encoded query, refresh the control snapshot, and say the rule needs investigation. If the safe request fails, diagnose application availability before interpreting the WAF result.
+**Official references:** [Onboard a domain](https://developers.cloudflare.com/fundamentals/manage-domains/add-site/) · [Proxy status](https://developers.cloudflare.com/dns/proxy-status/) · [Universal SSL](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/)
 
 ---
 
-# Slide 07 — Show the Security Event
+## Cue 11/27 — Slide 7 — 09:30–10:20
+### Architecture — protect and accelerate the public path
+**Shared screen:** Advance to Slide 7. Stay on the slide until the final sentence.
 
-**Timing:** 50–60 seconds
-**Objective:** Connect enforcement with incident investigation and operational evidence.
+### Say
+On the public path, browsers, mobile clients, legitimate crawlers, and attackers reach Cloudflare first. The same edge path can absorb DDoS traffic, evaluate WAF and bot signals, enforce rate and API controls, accelerate allowed traffic, and invoke Worker logic when custom behavior is justified.
 
-## Say
+The value is not a longer product list. It is fewer serial control points before the application and shared evidence across security, infrastructure, and application teams.
 
-“The Ray ID connects the browser-visible block to Cloudflare Security Events. The event records the action, source security feature, host, path, query, time, and rule.”
+### Do now
+- Trace the public path left to right.
+- Keep the explanation tied to the customer’s discovered priority.
 
-“I keep sensitive event fields inside the authenticated dashboard. This public deck does not expose the visitor IP or account details. The copy-evidence action produces only the host, path, action, Ray ID, and timestamp.”
+**Transition:** “The private path solves a different exposure problem.”
 
-## Do
+**Truth boundary:** Cloudflare can front many origins; do not claim every workload should move to the edge.
 
-1. Point to the Ray ID carried forward from the previous slide.
-2. Open Cloudflare Security Events in the prepared tab.
-3. Filter or search using the Ray ID without the colo suffix if necessary.
-4. Expand the event and show Block → Custom rules, host, path, and rule.
+**If it fails:** If the live portal is not ready, remain in the deck and use Appendix Slide 16 as the demo map.
 
-## Proof to point at
-
-- Exact Ray ID correlation.
-- Timestamp alignment.
-- Action is Block.
-- Source is Custom rules.
-- Path is `/attack-lab`.
-
-## Likely question
-
-**How would you operationalize this beyond the dashboard?**
-
-Export security events to the organization’s logging or SIEM workflow, preserve correlation identifiers across application logs, create alerts for meaningful thresholds, and attach a clear owner and response playbook. Sampling and plan availability matter, so the design should state what evidence is guaranteed versus sampled.
-
-## Transition
-
-“The WAF handled an obvious payload. Automated traffic needs a different class of signals.”
-
-## Recovery
-
-If the event has not appeared yet, keep the Ray ID on screen and continue. Say: “The enforcement proof is the live 403; dashboard indexing is asynchronous, and the Ray ID lets me retrieve the event when it arrives.”
+**Official references:** [Access applications](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/) · [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/)
 
 ---
 
-# Slide 08 — Add bot protection
+## Cue 12/27 — Slide 7 — 10:20–11:00
+### Architecture — remove unnecessary private exposure
+**Shared screen:** Advance to Slide 7. Stay on the slide until the final sentence.
 
-**Timing:** 40–50 seconds
-**Objective:** Explain the configured control and distinguish it from higher-plan capabilities.
+### Say
+Administrators, developers, partners, and internal tools should be governed by identity and policy. Access makes the identity-aware decision, and Tunnel can connect the origin outbound so it does not require a public inbound service.
 
-## Say
+AppSec and Zero Trust are not competing stories. AppSec protects what must remain public; Zero Trust removes unnecessary exposure from private administrative surfaces.
 
-“This zone is on the Free plan, so the real configured control is Bot Fight Mode. It is an on/off control that challenges traffic matching patterns of known bots. It is not the same as Enterprise Bot Management.”
+I’ll prove the public path first, beginning with the basic requirements: zone context, proxied DNS, and SSL/TLS.
 
-“Enterprise Bot Management produces a score from 1 to 99 and supports rules based on that score. Super Bot Fight Mode adds more configurable categories on eligible plans. I am naming those distinctions because security demonstrations lose credibility when they claim controls the account does not actually have.”
+### Do now
+- Advance to Slide 8.
+- Switch to the prepared Cloudflare dashboard window.
+- Do not add another architecture tangent.
 
-## Do
+### Ask / check the room
+“Does that public AppSec / private Zero Trust split fit your environment?”
 
-Point to the live mode and the plan-aware note. Let the radar animation support the explanation, but call it a visualization—not a live per-request bot score.
+**Transition:** “First, I verify the control point before discussing enforcement.”
 
-## Proof to point at
+**Truth boundary:** Do not claim Access or Tunnel is live unless the UI proves it.
 
-- Control snapshot reports `bot-fight-mode`.
-- Preflight confirms the mode is configured.
-- The slide explicitly states that Enterprise score rules are unavailable here.
+**If it fails:** If the live portal is not ready, remain in the deck and use Appendix Slide 16 as the demo map.
 
-## Likely question
-
-**When would you use Turnstile instead of bot scoring?**
-
-Bot controls evaluate automated traffic broadly at the edge. Turnstile is useful at a sensitive interaction—login, signup, password reset, checkout, or form submission—where the application needs a server-verifiable proof before accepting the action. They are complementary layers.
-
-## Transition
-
-“For the login interaction, I want proof tied to one specific action.”
-
-## Recovery
-
-Do not infer a bot decision from the radar. If the control snapshot is unavailable, describe the configured intent but mark live status as unknown.
+**Official references:** [Access applications](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/) · [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/)
 
 ---
 
-# Slide 09 — Add Turnstile to login
+## Cue 13/27 — Slide 8 — 11:00–11:45
+### Portal handoff — verify the correct zone
+**Shared screen:** Show Slide 8 briefly, then Alt+Tab to Cloudflare. Use the pre-opened zone Overview tab.
 
-**Timing:** 60–75 seconds
-**Objective:** Demonstrate human verification with mandatory server-side validation and an honest no-session boundary.
+### Say
+I start with the object we are changing: the correct account, the correct zone, and the current service state.
 
-## Say
+Before I show a security feature, I want to prove that innovativefuturesolutions.com is the zone receiving the policy and distinguish three things clearly: the zone plan, the products entitled for the account, and the controls actually configured here.
 
-“Turnstile is not complete when the browser widget turns green. The widget gives the browser a short-lived token. The Worker must send that token to Cloudflare Siteverify and accept the action only when the server response says it is valid.”
+### Do now
+- Cloudflare dashboard → select innovativefuturesolutions.com → Overview.
+- Point to the zone name, active status, plan or entitlement only when clearly visible, and recent request activity.
+- Do not linger on generic dashboard cards.
 
-“The site key is public by design. The secret remains a Worker secret and never enters browser JavaScript or this repository. This endpoint deliberately creates no account, password, cookie, or session; it demonstrates verification without pretending to be a complete identity system.”
+**Dashboard search:** `innovativefuturesolutions.com` · `Overview`
 
-## Do
+**Evidence:** Correct zone name · Active zone · Traffic or request activity · Enterprise plan/feature status only if clearly visible
 
-1. Complete the Turnstile interaction.
-2. Submit the demo username.
-3. Wait for: “Human verification succeeded.”
-4. Emphasize the no-account/no-session result.
+**Transition:** “Now I’ll show the point where Cloudflare becomes inline.”
 
-## Proof to point at
+**Truth boundary:** Show only what the dashboard proves. Menus do not prove entitlement.
 
-- Widget reaches success state.
-- Worker calls Siteverify server-side.
-- API returns `verified: true` only after Cloudflare accepts the token.
-- Token is reset after submission.
+**If it fails:** If navigation has moved, search for the zone name. If plan or entitlement details are not visible, say: “I do not want to infer entitlement from the menu; I’ll show only what this zone proves.”
 
-## Likely question
-
-**What else would a production login need?**
-
-Credential or identity-provider verification, secure session issuance, CSRF protection where cookies are used, rate limiting, account lockout and recovery controls, audit logging, secure cookie attributes, and risk-based monitoring. Turnstile reduces automated abuse; it does not replace authentication or authorization.
-
-## Transition
-
-“The login is one API operation. Next I’ll show how I make the whole API surface visible and testable.”
-
-## Recovery
-
-If the widget cannot load, show `/api/config` to prove the public site key is configured and explain the server-side route. Do not claim a successful verification unless Siteverify actually returns success.
+**Official references:** [Open Cloudflare dashboard](https://dash.cloudflare.com/)
 
 ---
 
-# Slide 10 — API Discovery and API Gateway
+## Cue 14/27 — Slide 8 — 11:45–12:45
+### DNS — prove the application is proxied
+**Shared screen:** Stay in Cloudflare. Open the preloaded DNS tab or search for DNS.
 
-**Timing:** 90–120 seconds
-**Objective:** Show intended API inventory, live endpoint behavior, redaction, a highlighted Cloudflare control graph, plan boundaries, and a real 200→429 edge enforcement loop.
+### Say
+This orange-cloud record is the key onboarding proof. DNS still answers for the hostname, but HTTP and HTTPS traffic now traverses Cloudflare before the origin or Worker.
 
-## Say
+That is what makes DDoS protection, WAF, bot controls, rate limiting, caching, analytics, and Workers available on the request path. A DNS-only record resolves directly and does not receive those HTTP-layer services.
 
-“You cannot secure an API surface you cannot see. Enterprise API Discovery observes traffic and normalizes similar paths. Endpoint Management, which is live here, stores the operations the team chooses to manage. The OpenAPI contract represents intended behavior; an Enterprise POC would compare that contract to observed traffic to reveal undocumented or shadow APIs.”
+Proxying does not by itself prevent origin bypass; production design must also restrict or authenticate origin access.
 
-“This inventory has eight declared operations. I can execute each public GET operation from the slide and see the HTTP status, Ray ID, and public-safe JSON. The request-inspection endpoint proves the Worker saw the hostname, path, protocol, TLS, and colo while intentionally excluding IP addresses, cookies, credentials, and bodies.”
+### Do now
+- DNS → Records.
+- Filter or search for the apex, www, or the actual app/API hostname.
+- Point to Type, Name, Target, and Proxy status. Do not expose or edit unrelated records.
 
-“The canary link sends the live `/api/security-controls` response into PlatPhorm JSON on Cloudflare. It opens a guided Graph view that steps through WAF, bot controls, managed API endpoints, and rate limiting, then returns directly to this slide. Every successful GET in the API explorer also exposes the same full-response handoff. The graph is fetched from this Worker at presentation time; it is not a fabricated screenshot.”
+### Ask / check the room
+“Does that answer how Cloudflare becomes inline, or should I go deeper on partial/CNAME onboarding?”
 
-“The burst-control route is deliberately isolated. A normal response returns 200 from the Worker. The rate-limiting rule counts requests by data-center location and client IP; after the threshold, the edge returns 429 for ten seconds. The exact number of 200s can vary because distributed counters may update with a short delay—the security proof is the transition from Worker JSON to an edge 429.”
+**Dashboard search:** `DNS` · `Records` · `Proxy status`
 
-“One current limitation is important: Endpoint Management is available on all plans, but performance metrics may not populate for Worker-handled routes because there is no conventional origin timing to measure.”
+**Evidence:** A or CNAME record for the demonstrated hostname · Proxy status = Proxied / orange cloud
 
-## Do
+**Transition:** “The next validation is the encryption posture on both sides of that proxy.”
 
-Run these operations in order:
+**Truth boundary:** Proxied DNS puts HTTP/S traffic on Cloudflare; it does not by itself prevent direct-origin access.
 
-1. `/api/health`
-2. `/api/security-controls`
-3. Select **Open the highlighted control graph** and point out the four color-coded control paths.
-4. Return to the deck, then run `/api/demo/preflight` and `/api/demo/request-inspection`.
-5. Select **Run controlled burst** and narrate the allowed count, wait state, and first 429.
-6. Open **Security → WAF → Rate limiting rules** only if the panel wants the configuration detail.
+**If it fails:** If the relevant record is DNS only, say: “This is the exact POC change we would schedule and validate; I will not toggle production routing ad hoc.”
 
-## Proof to point at
-
-- Live status and Ray/request ID for each request.
-- Eight declared operations.
-- Redacted inspection response.
-- OpenAPI document linked from the slide.
-- Live PlatPhorm JSON canary graph sourced from `/api/security-controls`, with WAF, bot, API, and rate-limit highlighting.
-- Bounded burst transitions from Worker 200 to edge 429 on the isolated path.
-- Active rate-limit rule: five requests per 10 seconds with a 10-second mitigation timeout.
-
-## Likely question
-
-**Why not rate-limit the real login route?**
-
-The demo isolates burst traffic so repeated interview tests cannot interfere with Turnstile validation or legitimate browsing. In production the threshold, characteristics, action, and scope would be derived from real traffic and the abuse model. A sensitive API would also add strong authentication such as JWT validation or mTLS where appropriate, application authorization, schema validation, sequence and abuse detection, consistent error envelopes, and correlated logs without credentials or personal data.
-
-## Transition
-
-“The individual controls now form one request pipeline. I’ll summarize that pipeline before discussing broader platform architecture.”
-
-## Recovery
-
-If an explorer call fails, open the endpoint directly. If the burst remains 200, say: “Cloudflare documents that distributed counters can take a few seconds to update; I will not manufacture a 429.” Move on and use the active rule configuration as control evidence, not request evidence. If API Shield metrics are empty, explain the documented Worker limitation rather than describing the endpoint as undiscovered.
+**Official references:** [Proxy status](https://developers.cloudflare.com/dns/proxy-status/) · [Onboard a domain](https://developers.cloudflare.com/fundamentals/manage-domains/add-site/)
 
 ---
 
-# Slide 11 — How Cloudflare protects the application
+## Cue 15/27 — Slide 8 — 12:45–13:30
+### TLS — verify edge and origin trust
+**Shared screen:** Stay in Cloudflare. Open SSL/TLS → Overview.
 
-**Timing:** 50–60 seconds
-**Objective:** Synthesize the demonstration into one edge-enforcement model.
+### Say
+Cloudflare terminates the browser’s TLS connection at the edge and presents the managed edge certificate.
 
-## Say
+For a conventional proxied origin, Cloudflare then creates a separate origin connection; my target posture is Full (strict), because it validates the origin certificate rather than merely encrypting the hop. I am checking the actual mode on screen, not assuming it.
 
-“The visitor reaches Cloudflare before reaching application code. Cloudflare terminates TLS, applies DDoS protections, evaluates WAF policy, applies bot controls, validates Turnstile where the application requests it, and builds API visibility. Only allowed requests invoke the Worker.”
+This demonstration application is Worker-backed, so the deck itself has no conventional web-origin hop. The zone view still shows where I would validate certificate and origin-trust posture for customer origins.
 
-“That changes both security and performance. Rejected traffic consumes edge capacity rather than application capacity. Allowed traffic carries Cloudflare context into code executing near the user. The application still owns authorization, validation, business logic, data protection, and safe failure behavior; the edge is a powerful enforcement layer, not an excuse to remove application security.”
+### Do now
+- SSL/TLS → Overview, then Edge Certificates only if it is already open.
+- Point to the current encryption mode and active edge certificate.
+- State that Full (strict) applies to proxied origin connections; do not imply the Worker route uses an origin certificate.
 
-## Do
+### Ask / check the room
+“Does that cover the SSL requirement, or should I go deeper on origin-side trust?”
 
-Trace the diagram left to right and end on “Blocked traffic never reaches application code.”
+**Dashboard search:** `SSL/TLS` · `Overview` · `Edge Certificates`
 
-## Proof to point at
+**Evidence:** Current encryption mode · Active edge certificate · Any obvious posture finding
 
-- Safe request reached Worker and returned 200.
-- WAF request stopped with 403 before Worker.
-- Turnstile required a server verdict.
-- API requests exposed Ray IDs and redacted edge context.
+**Transition:** “The path is inline. Now I move from configuration to evidence.”
 
-## Likely question
+**Truth boundary:** State the displayed mode honestly and distinguish edge TLS from a conventional origin connection.
 
-**What is the biggest operational risk in moving logic to the edge?**
+**If it fails:** If the mode is not Full (strict), say: “This is a concrete POC finding. I would validate the origin certificate and dependencies before changing the mode.”
 
-Distributed execution changes assumptions about state, observability, testing, and rollbacks. Code must not depend on process-local mutable state. Logs and traces need correlation. Deployments need staged validation and fast rollback. Data placement and consistency must be chosen explicitly.
-
-## Transition
-
-“That leads to the first architecture question: where should state live?”
-
-## Recovery
-
-This slide is the fallback conclusion. If time is short, stop here after restating the core thesis. The next three slides are optional depth.
+**Official references:** [SSL/TLS overview](https://developers.cloudflare.com/ssl/) · [Universal SSL](https://developers.cloudflare.com/ssl/edge-certificates/universal-ssl/)
 
 ---
 
-# Slide 12 — Choose state by consistency
+## Cue 16/27 — Slide 9 — 13:30–15:00
+### Security Analytics — understand all incoming traffic
+**Shared screen:** Alt+Tab to the deck, advance to Slide 9, say the headline, then Alt+Tab back to Cloudflare.
 
-**Timing:** 60–90 seconds
-**Objective:** Demonstrate reasoning through Cloudflare data services instead of reciting a product list.
+### Say
+Security Analytics is where I establish the broad incoming HTTP traffic baseline before changing policy. I’m looking for hosts, paths, methods, response patterns, likely attack signals, and the difference between normal behavior and outliers.
 
-## Say
+This is the observe-first step. It supports rule design, false-positive analysis, and POC measurement. I do not start with a broad block and hope production traffic teaches me what broke.
 
-“The first question is not ‘Which database is fastest?’ It is ‘What invariant must the system preserve?’ The decision lab maps workloads to the property that matters.”
+### Do now
+- Primary path: Security → Analytics → Traffic. Alternate: search for “Security Analytics.”
+- Set a useful time range and filter by the demonstrated hostname when needed.
+- Point to one meaningful distribution: path, action, country, status, bot grouping, or attack score when available.
+- Use this baseline to explain how a production threshold or exception would be selected.
 
-“KV optimizes globally distributed reads and accepts eventual consistency. Durable Objects provide one authoritative, strongly consistent coordination point per object identity. D1 provides serverless relational data with SQLite semantics. R2 stores object bytes through an S3-compatible API without egress fees. Hyperdrive accelerates connections to an existing PostgreSQL or MySQL database and can reduce migration risk.”
+**Dashboard search:** `Security` · `Analytics` · `Traffic` · `Security Analytics`
 
-## Do
+**Evidence:** All incoming HTTP traffic · Useful filter controls · One normal-versus-suspicious pattern · Rate recommendation context if available
 
-Select two contrasting scenarios:
+**Transition:** “That is the full traffic view. Security Events is the investigation view.”
 
-1. **Feature flags** → KV.
-2. **Multiplayer room** → Durable Objects.
+**Truth boundary:** Analytics is the broad traffic baseline; do not describe it as only blocked events.
 
-If asked, also demonstrate customer records → D1, media → R2, and existing PostgreSQL → Hyperdrive.
+**If it fails:** Low-volume zone: “The data volume is intentionally small. In a customer POC, this page establishes the baseline on production traffic before enforcement.”
 
-## Proof to point at
-
-This is explicitly an architecture decision simulation. The highlighted recommendation comes from the selected workload; it is not a claim that these services are provisioned in this demo.
-
-## Likely question
-
-**When would you use Durable Objects instead of KV?**
-
-Use KV when read speed and global distribution matter more than immediate consistency. Use a Durable Object when concurrent requests must coordinate around one authoritative state—for example, a room, lock, limiter, collaborative document, or leader. A balance or inventory decrement should not rely on eventually consistent KV.
-
-## Transition
-
-“After choosing state, I keep expensive or failure-prone work off the latency-sensitive request path.”
-
-## Recovery
-
-If the decision lab does not animate, explain the same invariant manually: read distribution, coordination, relational queries, object bytes, or existing data gravity.
+**Official references:** [Security Analytics docs](https://developers.cloudflare.com/waf/analytics/security-analytics/)
 
 ---
 
-# Slide 13 — Async, AI, retrieval, and browser work
+## Cue 17/27 — Slide 9 — 15:00–17:00
+### Security Events — investigate what was flagged or acted on
+**Shared screen:** Stay in Cloudflare. Open Security Events.
 
-**Timing:** 60–90 seconds
-**Objective:** Explain how bindings and asynchronous design turn the edge into an application platform.
+### Say
+Security Events answers a narrower operational question: which requests were flagged or acted on, by which security feature, and why?
 
-## Say
+I use the recent time window and correlate the host, path, action, rule, timestamp, and Ray ID. The Ray ID connects the browser-visible result to the dashboard investigation.
 
-“The request path should do the minimum work needed to return a trustworthy response. If a task is expensive, slow, or failure-prone, acknowledge it and move it behind a queue.”
+If indexing is delayed, the live request outcome remains the enforcement proof; the Ray ID and timestamp preserve the investigation handle.
 
-“Queues provides at-least-once delivery, so consumers must be idempotent. Workers AI provides managed inference. Vectorize stores and queries embeddings for semantic search and retrieval-augmented generation. Browser Run provides managed headless browser execution for screenshots, PDFs, testing, scraping, and agent workflows.”
+### Do now
+- Primary path: Security → Analytics → Events. Alternate: search “Security Events.”
+- Set Last 24 hours or a narrow time window and filter Path contains /cf-demo/.
+- Open one event and point to Action, Service/Rule, Host/Path, timestamp, and Ray ID.
+- Avoid exposing visitor IPs or unrelated request details while screen sharing.
 
-“Bindings are the connective tissue. The Worker receives a capability through its environment rather than sending platform credentials to browser code.”
+### Ask / check the room
+“Does this give your security and application teams the shared evidence they would need?”
 
-## Do
+**Dashboard search:** `Security` · `Analytics` · `Events` · `Security Events` · `/cf-demo/`
 
-Select **Animate request path**. Narrate each highlighted step. Explicitly state that this is a platform architecture simulation and these services are not all provisioned by this demo.
+**Evidence:** An event triggered by WAF, rate limiting, DDoS, API Shield, or another control · Action · Matched service/rule · Ray ID
 
-## Proof to point at
+**Transition:** “Now that we have evidence, I’ll show how the policy is constructed.”
 
-- The simulation label prevents a false deployment claim.
-- Each step explains its contract and failure model.
-- The live application itself demonstrates the Worker and Turnstile bindings pattern.
+**Truth boundary:** Events explains flagged or acted-on requests; indexing may lag and sampling/retention vary by product and plan.
 
-## Likely question
+**If it fails:** If a fresh event is delayed: “The live request result is the enforcement proof. Dashboard indexing is asynchronous; the Ray ID and timestamp are the correlation handles. I will not spend the customer’s time waiting on a chart.”
 
-**Why put AI behind a queue?**
-
-Not every inference belongs behind a queue. Interactive inference may remain on the request path when latency and limits are acceptable. Batch enrichment, document processing, retries, fan-out, and long-running generation benefit from asynchronous delivery, idempotency, backpressure, and explicit job status.
-
-## Transition
-
-“Finally, I would not pitch this as ‘replace every regional service.’ I would migrate from the dominant constraint.”
-
-## Recovery
-
-If the animation is interrupted, select it again. Reduced-motion preferences intentionally compress the timing while preserving the sequence.
+**Official references:** [Security Events docs](https://developers.cloudflare.com/waf/analytics/security-events/)
 
 ---
 
-# Slide 14 — Edge first, not edge only
+## Cue 18/27 — Slide 10 — 17:00–18:15
+### Managed Rules — start with maintained baseline coverage
+**Shared screen:** Alt+Tab to the deck, advance to Slide 10, give the headline, then Alt+Tab back to Cloudflare.
 
-**Timing:** 60–90 seconds
-**Objective:** Give a nuanced Workers-versus-regional-serverless answer and an incremental migration plan.
+### Say
+Managed Rules mean the customer does not have to author protection for every common exploit or newly disclosed vulnerability from scratch.
 
-## Say
+I start with the Cloudflare Managed Ruleset and an OWASP baseline where appropriate, then scope, override, or create exceptions based on the application stack and the evidence in Security Events.
 
-“Workers and AWS Lambda solve overlapping but not identical problems. Workers uses V8 isolates and global edge placement for latency-sensitive request logic. Lambda is region-oriented and fits deeply AWS-native backends, broader managed runtimes, and workloads coupled to regional services.”
+The value is maintained coverage with customer-specific tuning, not a one-time signature package that the team has to own alone.
 
-“I would not begin with a brand-level replacement plan. I would identify the dominant constraint. For latency, move routing, authentication, transformation, and security policy to Workers. For coordinated shared state, choose Durable Objects or another strongly consistent system. For AWS data gravity, keep the system of record and move the request path first. For long jobs, return quickly and use a queue.”
+### Do now
+- New dashboard: Security → Security rules, then filter for Managed rules.
+- Alternate/older path: Security → WAF → Managed rules.
+- Show deployed rulesets, enabled state, action, and Browse rules/tags if convenient.
+- Do not deploy or globally override a ruleset live.
 
-“The migration sequence is: establish observability, move stateless edge logic, preserve the system of record, select new state primitives only where their consistency model fits, move slow work behind queues, and compare real latency, reliability, cost, and operational load.”
+**Dashboard search:** `Security rules` · `Managed rules` · `Cloudflare Managed Ruleset` · `OWASP Core`
 
-## Do
+**Evidence:** Deployed or available managed ruleset · Enabled state · Scope or override controls · Exceptions/skip controls if present
 
-Choose the constraint that best matches the interviewer’s question. Let the decision output produce the concise migration recommendation.
+**Transition:** “Managed coverage handles common exploit classes. Custom rules add the customer’s context.”
 
-## Proof to point at
+**Truth boundary:** Managed rules are a maintained baseline, not a claim that the application is invulnerable.
 
-The comparison names runtime, placement, routing, and best fit without claiming that one platform universally replaces the other.
+**If it fails:** If the ruleset is unavailable or not deployed: “I do not want to workshop a deployment live. The POC step is to establish the managed baseline in log or challenge mode, review findings with the application owner, and then promote the accepted rules.”
 
-## Likely question
-
-**How would you troubleshoot a distributed application during migration?**
-
-Start with one user-visible failure and preserve a correlation ID across edge and regional services. Check whether the request was blocked, allowed, routed, retried, or queued. Compare timestamps and deployment versions, validate state and cache assumptions, inspect dependency latency, reproduce with a minimal request, and roll back the smallest recent change when evidence points to it. Keep browser, edge, application, queue, and data-store evidence distinct.
-
-## Close
-
-“The through-line is deliberate boundaries. Enforce what the network knows at the edge, keep application authorization and business invariants in code, choose data services from consistency requirements, move unreliable work off the request path, and preserve evidence across every layer.”
-
-## Recovery
-
-If time is over, skip the decision buttons and use the close verbatim.
+**Official references:** [Managed Rules dashboard guide](https://developers.cloudflare.com/waf/managed-rules/deploy-zone-dashboard/)
 
 ---
 
-# 15-minute Q&A operating plan
+## Cue 19/27 — Slide 10 — 18:15–19:45
+### Custom Rules — prove narrow, deterministic enforcement
+**Shared screen:** Stay in Cloudflare. Open the Custom/Security rules list, then use the prepared Security Events tab.
 
-## How to answer
+### Say
+This custom rule must remain isolated to a non-production demonstration path. The release smoke test observed a 403 on the currently configured `/attack-lab` probe. The preferred `/cf-demo/attack` path reached Worker code with a 200, so I will not claim that path is WAF enforcement evidence until the dashboard scope and a fresh Security Event prove it.
 
-Use a three-part pattern: **answer directly in one sentence, support it with an architectural reason or live evidence, then bridge to the customer’s environment.** Aim for 20 seconds before adding depth. If the question is ambiguous, ask which dimension matters—security, operations, cost, migration, or developer experience.
+The distinction matters. A configured rule proves intent; the request proves enforcement; the event explains why Cloudflare acted.
 
-At 42:00, reserve the final three minutes: “I want to make sure we convert the useful questions into a next step. Let me summarize the two uncertainties I heard and propose how the POC would test them.”
+For customer policy, ambiguous conditions start in observation or challenge and move to block only after the application owner accepts the false-positive rate.
 
-## Why Cloudflare instead of a cloud-provider WAF?
+### Do now
+- Open the existing rule and verify its actual hostname/path scope and Block action. Do not edit it during the interview.
+- If the rule still targets `/attack-lab`, reproduce only with `curl.exe -i "https://innovativefuturesolutions.com/attack-lab?attack=xss&payload=%3Cscript%3Ealert(1)%3C%2Fscript%3E"`.
+- Filter Security Events for the path actually shown in the rule, then correlate the timestamp and CF-Ray.
+- Do not use the helper’s Block mode until `/cf-demo/attack` is explicitly aligned to the rule and independently verified.
 
-**Short answer:** “The differentiator is the independent, globally distributed request path and the breadth of controls on it, not that another WAF cannot match signatures.”
+### Ask / check the room
+“Did that address the enforcement and false-positive-control question adequately?”
 
-Cloudflare can front multiple clouds and on-premises origins consistently. The evaluation should compare security efficacy, propagation, false-positive operations, latency, observability, origin offload, and the cost of operating multiple point products—not logo counts. Ask which applications span providers and where policy drift occurs today.
+**Dashboard search:** `Security rules` · `Custom rules` · current rule path · `Action Block`
 
-## What prevents direct-to-origin bypass?
+**Evidence:** Exact hostname/path scope · Action = Block · Fresh HTTP 403 · Matching Security Event and Ray ID
 
-Cloudflare only protects traffic that traverses Cloudflare. In production, restrict origin access with Cloudflare IP allowlists, Authenticated Origin Pulls, Cloudflare Tunnel, private connectivity, origin firewall policy, or application-level authentication as appropriate. Validate that the origin address is not exposed through DNS history, certificates, emails, or adjacent services.
+**Transition:** “A WAF rule evaluates request characteristics. The next control evaluates behavior over time.”
 
-## How do you avoid WAF false positives?
+**Truth boundary:** Configuration is not enforcement proof. Pair request outcome with event evidence.
 
-Start with narrow scope and observation. Establish a traffic baseline, use managed-rule overrides only with evidence, stage from log or challenge to block, identify owners and rollback, test critical journeys, and monitor Security Events after every change. A POC success criterion should explicitly cap false positives on agreed business transactions.
+**If it fails:** If the result is not 403, say: “The configured rule did not produce the expected evidence, so I will not call it enforced. I’ll preserve the request and inspect scope, phase, order, and event data after the call.”
 
-## How does Cloudflare absorb DDoS attacks?
-
-Cloudflare’s network advertises and serves applications across many locations, detects attack traffic, and applies mitigations before the origin. Keep the answer at the architecture level unless contract-specific capacity or SLA terms are available. Tie the value to origin preservation and continuity, not an unsupported numerical promise.
-
-## Where does TLS terminate, and how is the origin protected?
-
-The browser’s TLS connection terminates at Cloudflare. In a proxied-origin design, Cloudflare creates a separate connection to the origin; use Full (strict), a valid origin certificate, and origin authentication. This Worker-origin demo has no second web-origin hop for the deck and APIs.
-
-## What is the difference between WAF, bot protection, Turnstile, and rate limiting?
-
-WAF evaluates request properties and attack patterns. Bot products classify automation and, at Enterprise, provide per-request scores. Turnstile gives an application a privacy-preserving human-verification token. Rate limiting controls request volume for a chosen scope and set of characteristics. They complement one another because intent, identity confidence, content, and volume are different signals.
-
-## Why Turnstile if Bot Management already scores requests?
-
-Bot signals help the edge classify traffic continuously. Turnstile is an explicit, application-initiated proof at a sensitive step such as login or checkout. It can be used only when risk warrants step-up friction, and the token must always be verified server-side.
-
-## What changes with Enterprise Bot Management?
-
-Enterprise Bot Management adds a 1–99 bot score, score-based WAF or Worker logic, detailed analytics, and more granular per-endpoint policy. The current zone demonstrates Bot Fight Mode and names that boundary. In a POC, tune scores and actions by endpoint rather than applying a blanket block.
-
-## Is API Discovery actually running here?
-
-No. Endpoint Management is live with eight saved operations; Enterprise API Discovery is not claimed on this Free-plan zone. API Discovery would add observed traffic and path normalization so the team can compare intended OpenAPI operations with unknown or shadow endpoints.
-
-## Why are Endpoint Management metrics empty?
-
-Cloudflare documents that certain origin performance metrics may not populate when a Worker handles the path, because there is no conventional origin timing to observe. The saved operation still demonstrates inventory. Use Worker observability and request evidence for this architecture, and avoid calling empty metrics a discovery failure.
-
-## Can rate limiting guarantee exactly five requests reach the origin?
-
-No. Cloudflare documents that counters are distributed by data-center location and enforcement can lag by a few seconds. The rule expresses a policy boundary, not a transactional semaphore. If exactly-once or globally coordinated quotas are required, combine edge rate limiting with an authoritative application or Durable Object control designed for that invariant.
-
-## How would you choose a production rate limit?
-
-Measure normal and abusive request distributions, segment by endpoint and client identity, include peak behavior, choose characteristics that match the abuse model, and begin with a non-destructive action. Validate legitimate bursts, NAT effects, verified bots, fail-open or fail-closed behavior, and rollback before blocking.
-
-## How does logging integrate with a SIEM?
-
-Enterprise designs commonly use Logpush or supported integrations to deliver security and request logs to customer storage or SIEM workflows. Define fields, redaction, retention, sampling, data residency, alert ownership, and correlation IDs before turning on volume. Never route credentials, cookies, or unnecessary personal data into the logging pipeline.
-
-## What about data residency and compliance?
-
-Do not answer with a blanket certification claim. Identify the exact data, geography, product, and regulatory requirement, then validate it against the current Cloudflare service documentation and contract. Separate control-plane data, request metadata, logs, content, and customer origin data; each may have a different handling path.
-
-## What is the rollback plan for onboarding?
-
-Document the DNS and routing state before change, reduce TTLs when appropriate, preserve the origin path, stage one hostname or route, define health checks, and name the person authorized to revert. For Worker logic, use versioned deployments and small changes. For security policy, retain the prior rule and disable the smallest new control first.
-
-## How do you migrate without replacing AWS?
-
-Move the first-hop security, routing, and latency-sensitive stateless logic first. Keep the existing regional system of record, connect deliberately, and measure. Migrate state only when the target consistency, compliance, operational, and cost model is better. The appendix decision labs support this discussion, but they are not required for the AppSec proof.
-
-## Who owns security after Cloudflare is deployed?
-
-Cloudflare can enforce TLS, DDoS, WAF, bot, rate, API, and routing controls at the edge. The customer still owns identity and authorization, secure code, secrets, data protection, dependency risk, origin configuration, incident response, and policy decisions. Capture this shared-responsibility boundary in the POC runbook.
-
-## How would you quantify ROI?
-
-Build the model from the customer baseline: current CDN/WAF/bot/API tools, support and operational labor, origin compute and egress, outage impact, fraud or abuse loss, deployment lead time, and incident response effort. Compare like-for-like contract scope and include migration work. Avoid generic percentage claims.
-
-## What if Cloudflare has an outage?
-
-Discuss architecture and contract scope, not absolutes. Identify dependency criticality, fail-open or fail-closed requirements, cached or static fallbacks, origin reachability, DNS strategy, status communications, and recovery objectives. Multi-provider designs add resilience but also routing, certificate, policy, observability, and testing complexity; prove the trade-off for the application.
-
-## What would you test first in the POC?
-
-Test the highest-value, lowest-ambiguity flow: a production-like hostname, one safe baseline journey, one agreed attack, one login abuse case, and one critical API. Measure functional success, false positives, latency, origin volume, event correlation, operational ownership, and rollback. Add products only when each addresses a discovered requirement.
-
-## Why is the Worker useful beyond hosting the demo?
-
-It demonstrates a programmable policy and integration layer on the same request path: normalize requests, validate tokens, add headers, route by context, perform lightweight authentication or transformation, call bindings, and preserve correlation. The business value is controlled customization without standing up a separate regional proxy tier.
-
-# Fast technical reference
-
-## Workers versus Lambda
-
-Workers emphasizes V8 isolates, Web APIs, and global edge execution. Lambda emphasizes regional execution, multiple managed runtimes and container packaging options, and deep integration with AWS regional services. Choose from latency, runtime requirements, data gravity, operational model, compliance, and failure modes.
-
-## KV versus Durable Objects
-
-KV is read-optimized and eventually consistent. Durable Objects provide a single coordination point with strongly consistent storage for an object identity.
-
-## D1 versus an existing PostgreSQL database
-
-D1 fits serverless relational application data with SQLite semantics. Keep PostgreSQL when it is the established system of record or requires features and operational patterns the application already depends on; use Hyperdrive where it improves connection behavior and latency.
-
-## R2 value proposition
-
-R2 is S3-compatible object storage without egress fees. It fits uploads, media, backups, build artifacts, datasets, and browser-rendering output.
-
-## Queue delivery guarantee
-
-Design consumers for at-least-once delivery. Make processing idempotent, define retry and dead-letter behavior, and expose job state rather than assuming exactly-once side effects.
-
-## Security ownership boundary
-
-Cloudflare can enforce TLS, DDoS, WAF, bot, rate, API, and request-routing policy at the edge. The application still owns authorization, input handling, business invariants, secrets, data protection, dependency safety, and secure failure behavior.
-
-## Evidence boundary
-
-Never convert a configured snapshot into a claim about a specific request. Use request-specific evidence for request claims: status, Ray ID, server verdict, and Security Event. Use configuration evidence for control-presence claims. Label architecture diagrams as simulations unless the services are truly provisioned.
-
-# Official reference links
-
-- Workers runtime: https://developers.cloudflare.com/workers/reference/how-workers-works/
-- WAF Security Events: https://developers.cloudflare.com/waf/analytics/security-events/
-- Security feature order: https://developers.cloudflare.com/waf/feature-interoperability/
-- Rate limiting rules: https://developers.cloudflare.com/waf/rate-limiting-rules/
-- Rate limiting counters: https://developers.cloudflare.com/waf/rate-limiting-rules/request-rate/
-- Bot Management: https://developers.cloudflare.com/bots/get-started/bot-management/
-- Turnstile server-side validation: https://developers.cloudflare.com/turnstile/get-started/server-side-validation/
-- API Shield Endpoint Management: https://developers.cloudflare.com/api-shield/management-and-monitoring/endpoint-management/
-- API Discovery: https://developers.cloudflare.com/api-shield/security/api-discovery/
-- Durable Objects: https://developers.cloudflare.com/durable-objects/concepts/what-are-durable-objects/
-- Workers KV: https://developers.cloudflare.com/kv/concepts/how-kv-works/
-- D1: https://developers.cloudflare.com/d1/
-- R2: https://developers.cloudflare.com/r2/how-r2-works/
-- Hyperdrive: https://developers.cloudflare.com/hyperdrive/concepts/how-hyperdrive-works/
-- Queues: https://developers.cloudflare.com/queues/reference/how-queues-works/
-- Workers AI: https://developers.cloudflare.com/workers-ai/
-- Vectorize: https://developers.cloudflare.com/vectorize/
-- Browser Run: https://developers.cloudflare.com/browser-run/get-started/
+**Official references:** [Create a custom rule](https://developers.cloudflare.com/waf/custom-rules/create-dashboard/)
 
 ---
 
-# Impact use case — secure browser multiplayer on one Cloudflare perimeter
+## Cue 20/27 — Slide 11 — 19:45–21:30
+### Rate Limiting — control valid-looking abusive behavior
+**Shared screen:** Alt+Tab to the deck, advance to Slide 11, give the headline, then Alt+Tab back to Cloudflare.
 
-**Customer scenario:** A startup game studio has migrated a browser-native multiplayer arena from a split AWS, Redis and Vercel-style path to Cloudflare. It expects future interoperability with a high-scale external online ecosystem such as GTA6 Online, but makes no claim of Rockstar affiliation, endorsement, API access or current integration.
+### Say
+A WAF rule evaluates what a request looks like. Rate limiting evaluates how behavior accumulates even when each request is syntactically valid.
 
-**Customer outcome:** Preserve simulation and graphics fidelity while reducing release-mixing, asset-pop-in, room divergence, attack surface and cross-provider latency. Every control must improve or leave gameplay unchanged; nothing optional may enter the authoritative input, tick, hit, pickup or score path.
+The rule has five choices: scope, counting characteristic, threshold, period, and action. The public deployment snapshot currently names `/api/demo/burst-control` as the configured target and `/cf-demo/rate-limit` as the preferred operator target. A single release request reached both paths with 200; I have not generated or verified a fresh 429 on the preferred path.
 
-## What is live and proven
+Production values come from Security Analytics, normal burst behavior, retry patterns, and the business cost of the endpoint—not from this intentionally low lab threshold.
 
-- Cloudflare authoritative DNS, anycast TLS, DDoS protection and WAF protect the canonical game hostname.
-- Workers Assets serves the application shell; the dedicated multiplayer Worker routes same-origin WebSockets to one SQLite Durable Object per room.
-- R2 serves deterministic runtime releases with byte ranges, SHA-256 ETags and immutable edge caching. Workers KV holds only the verified current-release pointer; it never owns match state.
-- D1 stores results, moderation and stewardship receipts. Cron, Queues and a DLQ maintain persistent joinable-room definitions asynchronously and never run the game loop.
-- Workers AI is reachable only through a private service binding for bounded post-match coaching.
-- Web Analytics RUM and Log Explorer provide passive player and edge evidence without delaying gameplay.
-- The final live gates passed: 60/60 OWASP-aligned probes, 1/1 two-human state convergence, 2/2 mobile landscape engines, 3/3 regional HTTPS/TLS checks, and a six-minute production tournament with seven bots, 70 bot-on-bot attacks and 11 frags.
-- A 16-client production WebSocket soak delivered and acknowledged all 19,200 gameplay events with no errors or closes; observed round-trip latency was 43.8 ms p50 and 44.6 ms p95 from the test location.
-- The deterministic release contract passed 282 suites and 1,545 tests. A 22-scenario physical-Chrome matrix covered eleven maps, three mobile profiles, five match modes, two quality extremes and third-person view; all scenarios passed at approximately 107–121 average FPS.
+### Do now
+- Open the existing rate-limiting rule and narrate the scope, counting characteristic, threshold, period, and action actually shown.
+- Show a prepared 429 only if the response and Security Event were captured after verifying the rule path.
+- If the rule still targets `/api/demo/burst-control`, do not use the helper’s RateLimit mode, which targets `/cf-demo/rate-limit`.
+- Run a bounded burst only after the dedicated path is aligned through an explicitly approved control-plane change.
 
-## Before and after performance evidence
+### Ask / check the room
+“Which endpoint in your environment is most expensive or most abused?”
 
-Seven matched samples compare the legacy hostname with the canonical Cloudflare hostname. Home-page median TTFB improved from 165.08 ms to 150.27 ms, an 8.97% reduction. Median total time improved from 188.98 ms to 175.98 ms, a 6.88% reduction. The exact 2,789,505-byte PK3 asset improved from 123.19 ms to 119.70 ms median TTFB and from 404.54 ms to 383.76 ms median total time; measured throughput increased 5.42%.
+**Dashboard search:** `Rate limiting rules` · current rule path · `Action Block` · `Status 429`
 
-Do not overstate the result. One home-page p95 connection outlier remains, and the population RUM window is still accumulating. Deep health endpoint timings are control-plane diagnostics, not gameplay latency.
+**Evidence:** Narrow hostname/path scope · Counting characteristic · Threshold and period · HTTP 200 before threshold · Edge HTTP 429 after threshold · Security Event when available
 
-The final same-client gameplay comparison is also intentionally asymmetric:
-Cloudflare Blocklands CTF reached the real scene at 120.17 FPS average,
-107.10 FPS 1% low and 9.1 ms p95 with no failures. The legacy host did not
-reach scene-ready and reported two renderer errors. Missing legacy FPS remains
-unavailable; it is not converted into an improvement claim.
+**Transition:** “Rate limits control volume. Bot signals help distinguish useful automation from abusive automation.”
 
-## Architecture boundary to narrate
+**Truth boundary:** Distributed counters are not a transactional semaphore; do not promise an exact number always reaches origin.
 
-![QuakeCraft complete Cloudflare runtime and evidence architecture. The authoritative WebSocket room path is isolated from assets, durable records, AI/search, analytics, media, release controls and benchmark evidence.](../platphorm-quake-cloudflare/docs/cloudflare-game-complete-runtime-and-benchmark.png)
+**If it fails:** If no 429 appears, say: “Distributed counters can update with a short delay, and I will not manufacture a result. The configuration proves intent; a 429 is required before I claim request-level enforcement.”
 
-The hot path is deliberately small: browser, edge security/delivery, the dedicated multiplayer Worker and one room Durable Object. R2, KV, D1, Queues, Workers AI, Vectorize, AI Search, media services and Zero Trust policy cannot determine a hit, pickup, movement state, timer, arena revision or winner.
+**Official references:** [Rate Limiting dashboard guide](https://developers.cloudflare.com/waf/rate-limiting-rules/create-zone-dashboard/)
 
-Workers KV is intentionally limited to the verified immutable asset-release pointer and other versioned, stale-safe defaults. Room settings, locks, counters, online state and per-tick bot decisions belong to the room Durable Object. Flagship is a future server-side-only option for reversible, non-authoritative visual, UX and telemetry rollouts; a browser provider would expose its API token and is therefore excluded. Containers are also excluded from gameplay and deployment because no current workload requires them and the account entitlement is not present.
+---
 
-## Next-release gates, not deployment claims
+## Cue 21/27 — Slide 11 — 21:30–22:30
+### Bots — preserve useful automation, challenge abusive automation
+**Shared screen:** Stay in Cloudflare. Show Bots only if the page is entitled and populated.
 
-- Vectorize and AI Search are approved only for a public-safe, source-cited corpus of maps, rules, release notes and runbooks. They are not provisioned until corpus, citation and privacy tests pass.
-- Realtime SFU and TURN are limited to explicit opt-in voice. Match identity and room authority remain in Durable Objects even if media fails.
-- Pipelines, R2 Data Catalog and Stream remain asynchronous analytics, spectator or replay planes.
-- Cloudflare One DNS policies protect enrolled studio and CI device egress only. They do not replace public authoritative DNS, CDN routing or player-path controls and require a canary plus policy-precedence audit before enablement.
+### Say
+I do not want to treat all automation as malicious. Verified search crawlers can be valuable; credential stuffing, inventory scraping, and automated abuse are not.
 
-## Presenter close
+Bot signals let policy vary by confidence and by path. On a sensitive endpoint, likely automated traffic might be challenged while high-confidence abuse is blocked. On a public content path, the response may be different.
 
-“This case study shows why layered application security is an architecture decision, not a collection of checkboxes. The security perimeter, application delivery and room authority are co-located at the Cloudflare edge, while assets, records, AI, analytics and media remain isolated by failure model. The proof is not the diagram: it is the passing live multiplayer, mobile, security, asset-integrity and deterministic release evidence behind it.”
+That protects the customer journey without using a blanket rule that punishes legitimate users or partners.
 
-- Full-stack serverless reference architecture: https://developers.cloudflare.com/reference-architecture/diagrams/serverless/fullstack-application/
-- Workers static assets: https://developers.cloudflare.com/workers/static-assets/
-- R2 Data Catalog getting started: https://developers.cloudflare.com/r2/data-catalog/get-started/
-- Cloudflare Log Explorer fields: https://developers.cloudflare.com/logs/logpush/logpush-job/datasets/zone/http_requests/
-- Cloudflare One DNS policies: https://developers.cloudflare.com/cloudflare-one/traffic-policies/dns-policies/
+### Do now
+- Security → Bots.
+- Show bot groupings or granular scores only if the account displays them.
+- If granular Bot Management is available, explain lower scores as more likely automated; never invent a distribution.
+- If API risk was the stronger discovery signal, keep this to 30 seconds and save time for Slide 12.
+
+### Ask / check the room
+“Is your automation problem primarily credential abuse, scraping, AI crawlers, or distinguishing useful bots?”
+
+**Dashboard search:** `Bots` · `Bot Management` · `Bot Analytics`
+
+**Evidence:** Verified bot grouping · Automated versus likely-human groupings · Path or action filters · Granular score only if entitled
+
+**Transition:** “For APIs, behavior is only part of the problem. We also need a known-good contract.”
+
+**Truth boundary:** Do not claim 1–99 scores unless Enterprise Bot Management is both entitled and visible.
+
+**If it fails:** If unavailable or empty: “Bot Management is a POC workstream rather than a configured proof in this zone. Rate limiting already proved behavior control, so I’ll keep moving.”
+
+**Official references:** [Bot score and grouping docs](https://developers.cloudflare.com/bots/concepts/bot-score/)
+
+---
+
+## Cue 22/27 — Slide 12 — 22:30–24:15
+### API Shield — move from unknown endpoints to known-good requests
+**Shared screen:** Alt+Tab to the deck, advance to Slide 12, give the API headline, then Alt+Tab back to Cloudflare.
+
+### Say
+API security starts with knowing what endpoints actually exist. Endpoint Management gives us the host, method, and path inventory; Schema Validation compares requests with a supplied or learned OpenAPI contract.
+
+I start schema enforcement in Log, review the events, and then block non-compliant requests on high-value endpoints once the application owner confirms the contract.
+
+That helps find undocumented or legacy endpoints, invalid request shapes, and gaps between what the application team believes is deployed and what traffic actually shows.
+
+### Do now
+- New dashboard: Web Assets → Endpoints or Schema validation.
+- Alternate path: Security → API Shield → Endpoint Management / Schema validation.
+- Show endpoint host, method, path, schema status, and current action only when populated.
+- If bot abuse was the stronger discovery signal, keep API Shield to the intended-versus-observed contract story and move on.
+- Mention JWT validation or mTLS only as an expansion when relevant.
+
+### Ask / check the room
+“Would intended-versus-observed API inventory be a meaningful POC outcome for you?”
+
+**Dashboard search:** `Web Assets` · `Endpoints` · `Schema validation` · `API Shield`
+
+**Evidence:** Endpoint inventory · Uploaded or learned schema · Log/Block action · Security Events integration
+
+**Transition:** “Most of this should remain configuration. I use Workers only when the application needs custom edge behavior.”
+
+**Truth boundary:** Endpoint Management is not the same as API Discovery; schema presence is not the same as blocking.
+
+**If it fails:** If data or entitlement is absent: “I have not validated API Discovery or schema enforcement as live in this zone, so I will not present it that way. The POC step is to import or learn the contract, start in Log, and review Security Events before enforcement.”
+
+**Official references:** [Schema Validation 2.0](https://developers.cloudflare.com/api-shield/security/schema-validation/) · [API Shield get started](https://developers.cloudflare.com/api-shield/get-started/)
+
+---
+
+## Cue 23/27 — Slide 12 — 24:15–24:45
+### Optional Worker — show judgment, not code volume
+**Shared screen:** Stay on Slide 12 or the Worker view only if already prepared. Skip this cue when behind time.
+
+### Say
+I would not write custom code where a native security product solves the problem.
+
+I use a Worker when the customer needs application-specific behavior at the edge — for example, a correlation ID, consistent security headers, canary routing, request normalization, or lightweight pre-origin validation.
+
+The business value is faster iteration without waiting for an origin application release.
+
+### Do now
+- Spend no more than 30 seconds.
+- Do not live-edit or deploy code.
+- CUT THIS FIRST if the clock is past 24:15 or the panel has already seen enough programmability.
+
+**Dashboard search:** `Workers`
+
+**Evidence:** A prepared Worker only
+
+**Transition:** “That completes the public application path. The private path needs a different trust model.”
+
+**Truth boundary:** Native product control first; custom code only for a real application-specific requirement.
+
+**If it fails:** Skip it cleanly: “Workers are optional here; the core security outcome is delivered by the native controls I just showed.”
+
+---
+
+## Cue 24/27 — Slide 13 — 24:45–26:15
+### Zero Trust — remove administrative and private exposure
+**Shared screen:** Alt+Tab to the deck and advance to Slide 13. Show the live Zero Trust UI only if it is already configured.
+
+### Say
+The adjacent Zero Trust opportunity is to stop treating administrative reachability as authorization. Access evaluates user identity, device posture, group membership, and context before the application. Tunnel connects the origin outbound, reducing the need for a public inbound service.
+
+The business value is smaller exposure, consistent access policy, and stronger audit evidence for admin, preview, partner, and internal applications.
+
+I am keeping this brief because the discovery priority was the public application path. One private hostname can be a separate POC workstream.
+
+### Do now
+- Optional UI: Zero Trust → Access controls → Applications.
+- Optional tunnel UI: Networking → Tunnels.
+- Show an existing application, policy, or healthy tunnel only. Do not build Zero Trust from scratch during this AppSec demo.
+- CUT THE LIVE UI if the clock is past 25:30; the slide and talk track are sufficient.
+
+### Ask / check the room
+“Which admin, preview, or partner surface would be the lowest-risk second workstream?”
+
+**Dashboard search:** `Access controls` · `Applications` · `Policies` · `Networking` · `Tunnels`
+
+**Evidence:** An Access application · Policy criteria · Tunnel health only if configured
+
+**Transition:** “With both surfaces covered, here is the smallest POC that produces measurable business evidence.”
+
+**Truth boundary:** Do not claim Access or Tunnel is live unless the UI proves it.
+
+**If it fails:** “Zero Trust is the adjacent design motion, not the core live proof today. I have not shown a deployed Access policy or healthy Tunnel unless the dashboard proves it, so I would make one admin or preview hostname a separate POC workstream.”
+
+**Official references:** [Access applications](https://developers.cloudflare.com/cloudflare-one/access-controls/applications/) · [Access policies](https://developers.cloudflare.com/cloudflare-one/access-controls/policies/) · [Create a Tunnel](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/)
+
+---
+
+## Cue 25/27 — Slide 14 — 26:15–27:20
+### POC — one hostname, two weeks, staged enforcement
+**Shared screen:** Advance to Slide 14. Stay on the slide. Leave the portal.
+
+### Say
+My recommendation is a two-week, one-hostname POC—not a broad migration.
+
+Days zero through two: select {{journey}}, confirm owners and rollback, proxy the target hostname, validate TLS, and establish the baseline. Days three through five: use Security Analytics and Events to tune managed and custom controls.
+
+Days six through eight: enforce high-confidence WAF and rate policies, then evaluate the bot or API motion that best matches {{pain}}. Days nine and ten: deliver the executive readout and expansion plan.
+
+### Do now
+- Point to Discover → Baseline → Enforce → Prove.
+- Keep the scope to one hostname and a few critical endpoints.
+- Do not reopen optional product demos.
+
+**Transition:** “The POC is only credible if the success gates are explicit.”
+
+**Truth boundary:** The customer defines acceptable false positives and business metrics before enforcement.
+
+**If it fails:** If they resist two weeks: “The duration is adjustable. The non-negotiable is one scoped surface, agreed evidence, named owners, and a rollback plan.”
+
+---
+
+## Cue 26/27 — Slide 14 — 27:20–28:30
+### POC — agree on evidence, owners, and expansion gate
+**Shared screen:** Advance to Slide 14. Stay on the slide. Leave the portal.
+
+### Say
+We agree on success before the first terminating rule: traffic inspected, mitigations by category, reduction in abusive origin requests, investigation time, zero critical false positives, customer-experience impact, and a rollback model both security and application teams trust.
+
+The executive readout answers three questions: did risk and origin load improve, did customer experience remain healthy, and can the operating teams own the controls?
+
+Does that structure fit how your team validates a security platform, and is there an approval or data-handling gate I have not accounted for?
+
+### Do now
+- Pause after the question.
+- Capture the approval or data-handling gate.
+- Do not rush to Slide 15.
+
+### Ask / check the room
+Pause and listen. Their answer qualifies the next step.
+
+**Transition:** “Let me close with the recommendation and the specific next meeting.”
+
+**Truth boundary:** Do not change the public deck’s two-week POC to 30 days.
+
+**If it fails:** If they resist two weeks: “The duration is adjustable. The non-negotiable is one scoped surface, agreed evidence, named owners, and a rollback plan.”
+
+---
+
+## Cue 27/27 — Slide 15 — 28:30–30:00
+### Ask for the next meeting — then stop
+**Shared screen:** Advance to Slide 15. Do not advance into the appendix unless Q&A requires it.
+
+### Say
+My recommendation is a focused rollout, not a rip-and-replace. Start with one critical application or API, put Cloudflare inline safely, prove visibility and mitigation, then expand from measured value.
+
+For {{journey}}, the POC must reduce {{pain}} and prove {{success}}. Security Events gives security and application teams shared tuning evidence; Access and Tunnel extend the model to private administrative surfaces.
+
+Can we schedule a POC design session with the application owner, CISO sponsor, and DevOps or infrastructure lead to agree on scope, metrics, owners, rollback, and rollout mechanics?
+
+### Do now
+- STOP TALKING after the question.
+- Let the panel answer.
+- Move into Q&A only after they respond.
+
+### Ask / check the room
+Ask the next-meeting question, then stop talking.
+
+**Transition:** Q&A. Use the Q&A view; keep answers under 60 seconds, then bridge back to the POC.
+
+**Truth boundary:** Do not weaken the ask. Stop after the question.
+
+**If it fails:** If asked to summarize in one line: “Protect the public revenue path, remove private exposure, and prove both with one measured POC.”
+
+---
+
+## When unsure — exact language
+### Exact limit, entitlement, SLA, or contract term
+“I do not want to guess at the exact limit or contract term. What I can say confidently is ___. I’ll capture the precise entitlement and follow up with the authoritative answer.”
+
+### Feature not proven in this zone
+“I have not validated that capability as active in this zone, so I will not present it as live. Here is how I would test it in the POC.”
+
+### Architecture known; product detail uncertain
+“I can answer the architecture and trade-off now. I want to verify the current product-specific behavior before I give you a definitive implementation answer.”
+
+### Live demo does not behave as expected
+“The control did not produce the expected evidence, so I am not going to call it successful. I’ll preserve the request details, investigate after the call, and keep us on the customer outcome.”
+
+### Confirm adequacy and move on
+“Did that answer the question at the depth you wanted, or is there one dimension I should clarify before I move on?”
+
+
+## Q&A bank
+### What makes Cloudflare genuinely different?
+Cloudflare runs the service stack throughout one global network and uses single-pass inspection near the request source. That creates an origin-independent control point where security, performance, analytics, Workers, and the Zero Trust expansion path share one operating model across clouds and data centers. I would still prove the value on one application rather than ask you to accept the platform story on faith.
+
+### How easy is it to get started, and what is available before Enterprise?
+The standard full-zone motion is add the domain, review DNS, update nameservers, proxy the application record, and validate SSL. A team can start self-service without installing an appliance or rewriting the application, with foundational DNS, Universal SSL, CDN, DDoS protection, and a managed WAF baseline. Enterprise adds depth, policy flexibility, support, and contract-specific commitments; exact entitlement must still be verified in the account.
+
+### Can Cloudflare front applications in more than one cloud?
+Yes. The proxy and security control point can sit in front of applications across public clouds, SaaS platforms, and private infrastructure. The POC should test routing, origin authentication, observability, and failure handling for the customer’s actual origin topology rather than treating multi-cloud as only a diagram.
+
+### Why Cloudflare instead of our current WAF or cloud-native controls?
+I would not assume the current controls are worthless. The POC compares operating outcomes. Cloudflare’s differentiation is that the enforcement point also provides DDoS protection, bot and API controls, analytics, performance, programmable edge logic, and a Zero Trust expansion path. The value to prove is fewer enforcement silos, faster policy changes, and less abusive traffic reaching origin.
+
+### How do you prevent false positives?
+Scope by hostname and path, start with visibility, use non-terminal actions for ambiguous traffic, inspect Security Events, create narrow exceptions, and promote only high-confidence policy to Block. “Zero critical false positives” is a POC gate; “zero false positives forever” would not be a credible promise.
+
+### What is the rollback plan?
+First disable or revert the specific rule that caused the issue. Keep changes versioned and owner-approved. Proxy or DNS rollback is an onboarding-level contingency, not the first response to a bad WAF rule, because it can remove the protection layer and expose the origin path.
+
+### Can attackers bypass Cloudflare and hit the origin directly?
+That risk must be addressed as part of onboarding. Common controls include restricting origin ingress to Cloudflare paths, using authenticated origin mechanisms where appropriate, removing leaked origin addresses, and using Tunnel when the origin should not accept inbound Internet connections. I would validate origin bypass explicitly in the POC.
+
+### How is Security Analytics different from Security Events?
+Security Analytics is the broader incoming HTTP traffic view, including traffic Cloudflare did not act on. Security Events is the investigation view for requests that security products flagged or acted on. Analytics establishes the baseline; Events explains mitigations and supports tuning.
+
+### Why use Managed Challenge instead of Block?
+When a signal is suspicious but not deterministic, challenge gives us a safer intermediate action. It reduces automated abuse while preserving a path for legitimate users. Deterministic demo paths or high-confidence exploit traffic can be blocked; ambiguous behavior should be staged.
+
+### How do managed and custom rules work together?
+Managed rules provide maintained baseline coverage for common exploit classes. Custom rules add the customer’s context — specific hosts, paths, headers, source networks, or business logic. Exceptions should be narrow and evidence-based rather than disabling a whole ruleset.
+
+### How would you choose a production rate limit?
+Use real traffic distributions in Security Analytics, separate users or API clients by an appropriate counting characteristic, account for bursts and retries, test in observation or challenge mode, and validate customer impact. A demo threshold proves mechanics; it is not a production recommendation.
+
+### Will Bot Management block good bots?
+The policy should distinguish verified or useful automation from abusive automation and should vary by path. The safer rollout is observe, allow known-good bots, challenge likely automation on sensitive endpoints, and block only high-confidence abuse. Bot policy is not “block everything automated.”
+
+### What if we do not have a clean OpenAPI schema?
+Start with endpoint discovery and observed traffic, export or build the initial contract with the application owner, and put validation in Log. The gap itself is useful evidence: undocumented endpoints and inconsistent request shapes are part of the API risk the POC should surface.
+
+### Where does Zero Trust fit if this is an AppSec sale?
+It solves the adjacent exposure problem. AppSec protects public customer-facing routes. Access and Tunnel protect admin, preview, partner, and internal routes that should not be public. I keep it as a focused expansion motion rather than diluting the main AppSec proof.
+
+### How does this integrate with Terraform, APIs, and CI/CD?
+The operating model should move from a validated portal POC to versioned configuration through Cloudflare APIs or Terraform, with review, testing, staged deployment, and rollback. I would not make long-term production policy dependent on manual clicks.
+
+### How do events reach our SIEM?
+Cloudflare supports dashboard investigation and programmatic data paths such as Logpush and analytics APIs, depending on the product and entitlement. In a POC, we define which fields, destinations, retention, and correlation workflow the SOC needs, then validate end-to-end delivery rather than only showing a dashboard.
+
+### What happens if Cloudflare has an outage?
+Any inline platform becomes part of the availability design. The responsible answer is to review the customer’s availability objectives, Cloudflare service architecture, origin dependencies, change controls, and recovery runbook. I would not claim any provider eliminates all failure modes; the POC should validate operational readiness as well as feature behavior.
+
+### Does security at the edge add latency?
+Security processing is performed on Cloudflare’s distributed network, and the same platform can provide caching and delivery optimizations. The business answer is measured, not assumed: benchmark the critical journey before and during the POC, including tail latency, origin requests, and user experience.
+
+### What exactly would make the POC successful?
+One scoped application or API is onboarded safely; the team can see and explain attack traffic; high-confidence controls mitigate it without critical false positives; abusive requests reaching origin are reduced; the operational owners understand policy and rollback; and there is a defensible expansion plan.
+
+### What would you show an executive after the POC?
+The original business risk, measured traffic and attack findings, mitigations by control, origin impact, false-positive results, operational effort, remaining gaps, and a phased rollout recommendation tied to cost and risk. The executive readout should answer whether to expand, not merely list features used.
+
+### Why not deploy broad blocking immediately?
+Because safe security operations require application context and evidence. Broad blocking can create business impact faster than it creates security value. We can use deterministic controls immediately, but ambiguous or application-sensitive policy should move through observe, tune, challenge, and then block.

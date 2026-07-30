@@ -1,41 +1,30 @@
 # Innovative Future Solutions — Application Security at the Edge
 
-An interactive slide deck and live application-security demonstration deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com). Version 1.3.0 adds a real, path-scoped Cloudflare rate-limiting proof, an eight-control presenter preflight, a 30-minute private Solutions Engineer roleplay runbook, and a measurable POC close.
+An interactive 20-slide application-security working session deployed to Cloudflare Workers at [innovativefuturesolutions.com](https://innovativefuturesolutions.com). Version 1.4.0 leads with qualification and Cloudflare's network differentiation, verifies zone → DNS → SSL/TLS before product controls, keeps plan/entitlement/configuration/evidence states separate, and closes with a two-week POC.
 
 The guided walkthrough covers:
 
-1. Worker deployment
-2. Custom Domains
-3. Managed HTTPS
-4. A Cloudflare WAF custom rule
-5. A live blocked XSS probe
-6. Cloudflare Security Event evidence
-7. Bot Fight Mode on the zone's current plan
-8. Turnstile with mandatory server-side Siteverify validation
-9. API Shield Endpoint Management and an OpenAPI contract
-10. The request path through Cloudflare's edge
-
-Three architecture notes follow the live demo:
-
-- Choosing between Workers KV, Durable Objects, D1, R2, and Hyperdrive based on consistency and data shape
-- Moving asynchronous, AI, retrieval, and browser work to Queues, Workers AI, Vectorize, and Browser Run
-- Reasoning through Cloudflare Workers versus regional serverless and planning an incremental migration
+1. Introductions and quick qualification
+2. Cloudflare's global network and single-pass control point
+3. Approachable DNS, proxy, and TLS onboarding
+4. Public AppSec plus private Access and Tunnel architecture
+5. Security Analytics, Security Events, WAF, rate limiting, bots, API Shield, and optional Workers
+6. A two-week POC and direct design-session ask
+7. Five appendix slides for evidence, TLS truth, product state, Q&A discipline, and official sources
 
 ## Presenter workflow
 
 - Select **Present** or press `P` to open the command center.
 - Run preflight to check the Worker, hostname, HTTPS/TLS, WAF, bot control, Turnstile, and API inventory from public-safe live evidence.
 - Use `T` for the talk timer, `F` for fullscreen, and the arrow keys to navigate.
-- Execute public GET operations directly from the API Discovery slide and inspect the status, Ray/request ID, and redacted JSON response.
-- Open public-safe Worker JSON responses through the live Cloudflare canary, including a guided `/api/security-controls` graph with WAF, bot, API, and rate-limit focus steps.
+- Inspect public-safe Worker JSON at `/api/security-controls`; the deck does not generate attack or burst traffic.
+- Generate deterministic WAF and rate-limit evidence only with the private operator helper before the interview.
 - Download the generated [speaker notes](https://innovativefuturesolutions.com/downloads/cloudflare-application-security-speaker-notes.docx) from the command center.
 
 The original green presentation is the default. The archived orange visual treatment
 is available behind the stateless `?theme=modern` feature flag, for example
 `https://innovativefuturesolutions.com/?theme=modern#/10`. Both themes use the same
 HTML, application logic, APIs, and security controls.
-
-The storage, async/AI, and migration interactions are labeled architecture simulations. They explain selection criteria and trade-offs without claiming that optional platform services are provisioned by this demo.
 
 ## Architecture
 
@@ -67,6 +56,7 @@ The public evidence API includes:
 - `GET /api/demo/preflight`
 - `GET /api/demo/request-inspection`
 - `GET /api/demo/profile`
+- `GET /cf-demo/rate-limit`
 - `POST /api/demo/login`
 - `GET /api/docs`
 - `GET|POST /api/mcp`
@@ -81,13 +71,16 @@ The public deck also publishes a self-canonical URL, Open Graph and social-card 
 Authenticate Wrangler using a scoped Cloudflare API token, then configure the required secrets without writing them to disk:
 
 ```sh
-pnpm wrangler secret put TURNSTILE_SITE_KEY
-pnpm wrangler secret put TURNSTILE_SECRET
-pnpm wrangler secret put SECURITY_DEPLOYED_AT
-pnpm wrangler secret put WAF_RULE_STATUS
-pnpm wrangler secret put WAF_RULE_ID
-pnpm wrangler secret put BOT_POLICY_MODE
-pnpm wrangler secret put API_DISCOVERY_STATUS
+pnpm exec wrangler secret put TURNSTILE_SITE_KEY
+pnpm exec wrangler secret put TURNSTILE_SECRET
+pnpm exec wrangler secret put SECURITY_DEPLOYED_AT
+pnpm exec wrangler secret put WAF_RULE_STATUS
+pnpm exec wrangler secret put WAF_RULE_ID
+pnpm exec wrangler secret put ZONE_PLAN
+pnpm exec wrangler secret put BOT_POLICY_MODE
+pnpm exec wrangler secret put BOT_PRODUCT_ENTITLEMENT
+pnpm exec wrangler secret put BOT_SCORE_EVIDENCE
+pnpm exec wrangler secret put API_DISCOVERY_STATUS
 pnpm deploy
 ```
 
@@ -99,6 +92,7 @@ The zone-level WAF, bot, and API Shield controls are intentionally managed outsi
 - `/api/demo/profile` returns explicitly synthetic public data.
 - The XSS probe stays URL-encoded and is never rendered or executed.
 - Public evidence truncates Cloudflare rule IDs and does not expose visitor IP addresses.
-- Enterprise Bot Management scoring is not claimed on the current Free zone; the live control is Bot Fight Mode.
+- Zone plan, product entitlement, configured control, and request-level evidence are reported separately.
+- Bot scores are claimed only when the product entitlement and live score telemetry are both verified.
 
 See [SECURITY.md](SECURITY.md) for vulnerability reporting guidance.

@@ -284,8 +284,10 @@ function clearEvidence() {
   setText('[data-result="time"]', "—");
   document.querySelector(".event-card")?.classList.remove("has-evidence");
   ["baseline", "attack", "evidence"].forEach((stage) => setRunner(stage, ""));
-  document.querySelector('[data-result="output"]').textContent = "Choose a request to send through Cloudflare.";
-  document.querySelector('[data-result="badge"]').textContent = "READY";
+  const output = document.querySelector('[data-result="output"]');
+  const badge = document.querySelector('[data-result="badge"]');
+  if (output) output.textContent = "Choose a request to send through Cloudflare.";
+  if (badge) badge.textContent = "READY";
   setPresenterMessage("WAF evidence was cleared from this browser session. Cloudflare Security Events were not modified.");
 }
 
@@ -352,6 +354,7 @@ async function runProbe(type) {
 
 async function setupTurnstile() {
   const box = document.querySelector("#turnstile-widget");
+  if (!box) return;
   try {
     const { body } = await getJson("/api/config", { cache: "no-store" });
     const config = body.data.turnstile;
@@ -539,9 +542,17 @@ function selectMigrationGoal(key) {
 
 async function toggleFullscreen() {
   try {
-    if (document.fullscreenElement) await document.exitFullscreen();
-    else await document.documentElement.requestFullscreen();
-    setPresenterMessage(document.fullscreenElement ? "Fullscreen presentation mode enabled." : "Fullscreen presentation mode closed.");
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      setPresenterMessage("Fullscreen presentation mode closed.");
+      return;
+    }
+
+    // A modal dialog makes every control behind its backdrop non-interactive.
+    // Close it before entering fullscreen so slide and navigation buttons remain usable.
+    if (presenterDialog?.open) presenterDialog.close();
+    await document.documentElement.requestFullscreen();
+    setPresenterMessage("Fullscreen presentation mode enabled. Press F or Escape to exit.");
   } catch {
     setPresenterMessage("Fullscreen is unavailable in this browser context.");
   }
@@ -568,13 +579,20 @@ function resetDemo() {
   document.querySelector(".live-proof-strip")?.classList.remove("is-live");
   document.querySelectorAll(".is-selected, .decision-lab .is-active, .migration-lab .is-active, .platform-pipeline .is-active, .platform-pipeline .is-complete").forEach((element) => element.classList.remove("is-selected", "is-active", "is-complete"));
   document.querySelector(".storage-grid")?.classList.remove("is-deciding");
-  document.querySelector("[data-storage-output]").textContent = "Choose a workload; the recommendation follows the consistency and data-shape requirement.";
-  document.querySelector("[data-migration-output]").textContent = "Choose a constraint to produce a defensible migration answer.";
-  document.querySelector("[data-pipeline-output]").innerHTML = "<strong>Bindings are the connective tissue:</strong> the Worker receives platform capabilities through its environment instead of exposing service credentials to browser code.";
-  document.querySelector("[data-api-output]").textContent = "Select a GET operation to inspect its public-safe response.";
-  document.querySelector("[data-api-status]").textContent = "READY";
-  document.querySelector("[data-api-viewer]").hidden = true;
-  document.querySelector("[data-burst-output]").textContent = "The first responses should reach the Worker; the edge then returns 429.";
+  const storageOutput = document.querySelector("[data-storage-output]");
+  const migrationOutput = document.querySelector("[data-migration-output]");
+  const pipelineOutput = document.querySelector("[data-pipeline-output]");
+  const apiOutput = document.querySelector("[data-api-output]");
+  const apiStatus = document.querySelector("[data-api-status]");
+  const apiViewer = document.querySelector("[data-api-viewer]");
+  const burstOutput = document.querySelector("[data-burst-output]");
+  if (storageOutput) storageOutput.textContent = "Choose a workload; the recommendation follows the consistency and data-shape requirement.";
+  if (migrationOutput) migrationOutput.textContent = "Choose a constraint to produce a defensible migration answer.";
+  if (pipelineOutput) pipelineOutput.innerHTML = "<strong>Bindings are the connective tissue:</strong> the Worker receives platform capabilities through its environment instead of exposing service credentials to browser code.";
+  if (apiOutput) apiOutput.textContent = "Select a GET operation to inspect its public-safe response.";
+  if (apiStatus) apiStatus.textContent = "READY";
+  if (apiViewer) apiViewer.hidden = true;
+  if (burstOutput) burstOutput.textContent = "The first responses should reach the Worker; the edge then returns 429.";
   if (window.turnstile && turnstileWidgetId !== null) window.turnstile.reset(turnstileWidgetId);
   showSlide(0);
   setPresenterMessage("Demo state reset. Cloudflare configuration and dashboard Security Events were not modified.");
@@ -595,7 +613,7 @@ document.addEventListener("click", (event) => {
   if (action === "copy-slide-link") copyText(window.location.href, `Slide ${current + 1} link copied.`);
   if (action === "fullscreen") toggleFullscreen();
   if (action === "reset-demo") resetDemo();
-  if (action === "copy-attack") copyText(`curl -i '${window.location.origin}/attack-lab?attack=xss&payload=%3Cscript%3Ealert(1)%3C%2Fscript%3E'`, "WAF probe cURL copied.");
+  if (action === "copy-attack") copyText(`curl.exe -i "${window.location.origin}/attack-lab?attack=xss&payload=%3Cscript%3Ealert(1)%3C%2Fscript%3E"`, "Windows-safe WAF probe cURL copied.");
   if (action === "copy-evidence") {
     const ray = document.querySelector('[data-result="ray"]').textContent;
     const time = document.querySelector('[data-result="time"]').textContent;
@@ -657,7 +675,7 @@ document.addEventListener("touchend", (event) => {
 }, { passive: true });
 
 window.addEventListener("hashchange", () => showSlide(routeNumber(), false));
-document.querySelector("#demo-login").addEventListener("submit", submitLogin);
+document.querySelector("#demo-login")?.addEventListener("submit", submitLogin);
 
 showSlide(routeNumber(), false);
 initializeJsonViewerLinks();

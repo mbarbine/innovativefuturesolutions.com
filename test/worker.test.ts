@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { handleRequest, type Env } from "../src/index";
+import appJs from "../public/app.js?raw";
 import indexHtml from "../public/index.html?raw";
 import themeLoader from "../public/theme.js?raw";
 
@@ -24,11 +25,11 @@ describe("application security worker", () => {
     expect(indexHtml).not.toContain("fonts.googleapis.com");
     expect(indexHtml).not.toContain("fonts.gstatic.com");
     expect(indexHtml).toContain(
-      '<link id="deck-theme" rel="stylesheet" href="/styles.css?v=20260723.2" />',
+      '<link id="deck-theme" rel="stylesheet" href="/styles.css?v=20260730.3" />',
     );
-    expect(indexHtml).toContain('<script src="/theme.js?v=20260723.2"></script>');
+    expect(indexHtml).toContain('<script src="/theme.js?v=20260730.3"></script>');
     expect(indexHtml).toContain(
-      '<script src="/app.js?v=20260723.1" type="module"></script>',
+      '<script src="/app.js?v=20260730.3" type="module"></script>',
     );
     expect(themeLoader).toContain('params.get("theme") === "modern"');
     expect(themeLoader).toContain('document.getElementById("deck-theme")');
@@ -62,7 +63,11 @@ describe("application security worker", () => {
     expect(response.headers.get("strict-transport-security")).toContain("includeSubDomains");
     expect(response.headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
     expect(response.headers.get("content-security-policy")).toContain("https://static.cloudflareinsights.com");
-    expect(response.headers.get("content-security-policy")).not.toContain("'unsafe-inline'");
+    const csp = response.headers.get("content-security-policy") ?? "";
+    const scriptSrc = csp.split(";").find((directive) => directive.trim().startsWith("script-src "));
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(csp).toContain("script-src-attr 'none'");
+    expect(csp).toContain("script-src-elem 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'unsafe-inline'");
   });
 
   it("prevents the versioned deck shell from being served stale", async () => {
@@ -120,11 +125,16 @@ describe("application security worker", () => {
       path: "/api/demo/login",
       control: "Turnstile verified",
     });
+    expect(body.data.apiGateway.operations).toContainEqual({
+      method: "GET",
+      path: "/cf-demo/rate-limit",
+      control: "dedicated edge rate-limit proof target",
+    });
   });
 
   it("exposes an isolated, lightweight rate-limit target", async () => {
     const response = await handleRequest(
-      new Request("https://innovativefuturesolutions.com/api/demo/burst-control"),
+      new Request("https://innovativefuturesolutions.com/cf-demo/rate-limit"),
       env({ RATE_LIMIT_STATUS: "active" }),
     );
     const body = await response.json() as { ok: boolean; data: { allowed: boolean; meaning: string } };
@@ -133,6 +143,103 @@ describe("application security worker", () => {
     expect(body.ok).toBe(true);
     expect(body.data.allowed).toBe(true);
     expect(body.data.meaning).toContain("429 response proves");
+  });
+
+  it("supports the private helper's dedicated baseline, WAF, and API paths without overstating native enforcement", async () => {
+    const baseline = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/cf-demo/normal"),
+      env(),
+    );
+    const wafFallback = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/cf-demo/attack"),
+      env(),
+    );
+    const validApi = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/cf-demo/api?id=42&verbose=false"),
+      env(),
+    );
+    const invalidApi = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/cf-demo/api?id=not-an-integer"),
+      env(),
+    );
+
+    expect(baseline.status).toBe(200);
+    expect(await baseline.text()).toContain("public-safe request reached Worker code");
+    expect(wafFallback.status).toBe(200);
+    expect(await wafFallback.text()).toContain("Only an edge 403 plus a fresh Security Event");
+    expect(validApi.status).toBe(200);
+    expect(await validApi.text()).toContain("Worker fallback");
+    expect(invalidApi.status).toBe(400);
+    expect(await invalidApi.text()).toContain("not proof that native API Shield");
+  });
+
+  it.each([
+    ["bot-fight-mode", "Bot Fight Mode"],
+    ["super-bot-fight-mode", "Super Bot Fight Mode"],
+    ["bot-management", "Bot Management"],
+    ["enterprise-bot-management", "Enterprise Bot Management"],
+  ])("recognizes configured bot mode %s without inferring a plan", async (mode, label) => {
+    const controls = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/security-controls"),
+      env({ BOT_POLICY_MODE: mode }),
+    );
+    const preflight = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/demo/preflight"),
+      env({ BOT_POLICY_MODE: mode }),
+    );
+    const controlsText = await controls.text();
+    const preflightBody = await preflight.json() as {
+      data: { checks: Array<{ id: string; status: string; evidence: string }> };
+    };
+
+    expect(controlsText).toContain(label);
+    expect(controlsText).toContain("Unknown — verify in dashboard");
+    expect(controlsText).not.toMatch(/free[- ]plan/i);
+    expect(preflightBody.data.checks).toContainEqual({
+      id: "bots",
+      label: "Bot control",
+      status: "pass",
+      evidence: label,
+    });
+  });
+
+  it("warns when bot configuration is unknown", async () => {
+    const response = await handleRequest(
+      new Request("https://innovativefuturesolutions.com/api/demo/preflight"),
+      env({ BOT_POLICY_MODE: "unknown" }),
+    );
+    const body = await response.json() as {
+      data: { checks: Array<{ id: string; status: string; evidence: string }> };
+    };
+
+    expect(body.data.checks).toContainEqual({
+      id: "bots",
+      label: "Bot control",
+      status: "warn",
+      evidence: "Unknown — verify in dashboard",
+    });
+  });
+
+  it("publishes the 20-slide final deck without public attack or burst triggers", () => {
+    const titles = [...indexHtml.matchAll(/<section class="slide[^"]*" data-title="([^"]+)"/g)];
+
+    expect(titles).toHaveLength(20);
+    expect(indexHtml).toContain('data-title="Why Cloudflare"');
+    expect(indexHtml).toContain('data-title="Approachable onboarding"');
+    expect(indexHtml).toContain('data-title="Portal foundations"');
+    expect(indexHtml).toContain('data-title="Two-week POC"');
+    expect(indexHtml).toContain('data-title="Q&amp;A handling"');
+    expect(indexHtml).toContain('data-title="Source anchors"');
+    expect(indexHtml).toContain("two-week POC");
+    expect(indexHtml).not.toContain("30-day");
+    expect(indexHtml).not.toContain('data-action="attack-request"');
+    expect(indexHtml).not.toContain('data-action="run-burst"');
+  });
+
+  it("keeps fullscreen controls interactive and copies Windows-safe cURL", () => {
+    expect(appJs).toContain("if (presenterDialog?.open) presenterDialog.close()");
+    expect(appJs).toContain('curl.exe -i "${window.location.origin}/attack-lab');
+    expect(appJs).not.toContain("curl -i '${window.location.origin}");
   });
 
   it("returns a public-safe preflight matrix backed by configuration state", async () => {
