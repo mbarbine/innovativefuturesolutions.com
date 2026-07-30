@@ -75,6 +75,19 @@ describe("application security worker", () => {
     expect(csp).toContain("script-src-elem 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'unsafe-inline'");
   });
 
+  it("tombstones the removed public speaker notes before stale assets can respond", async () => {
+    const response = await handleRequest(
+      new Request(
+        "https://innovativefuturesolutions.com/downloads/cloudflare-application-security-speaker-notes.docx",
+      ),
+      env(),
+    );
+
+    expect(response.status).toBe(404);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(await response.text()).toBe("Not found");
+  });
+
   it("prevents the versioned deck shell from being served stale", async () => {
     const response = await handleRequest(
       new Request("https://innovativefuturesolutions.com/"),

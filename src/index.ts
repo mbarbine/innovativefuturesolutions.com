@@ -481,6 +481,13 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
 
+  if (url.pathname === "/downloads/cloudflare-application-security-speaker-notes.docx") {
+    return new Response("Not found", {
+      status: 404,
+      headers: { "cache-control": "no-store" },
+    });
+  }
+
   if ((url.pathname === "/api/health" || url.pathname === "/api/v1/health") && method === "GET") {
     return apiSuccess(health(env, request));
   }
