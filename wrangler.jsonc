@@ -11,6 +11,8 @@
       "/",
       "/index.html",
       "/api/*",
+      "/cf-demo/*",
+      "/downloads/cloudflare-application-security-speaker-notes.docx",
       "/openapi.yaml",
       "/llms*.txt",
       "/llms-index.json",

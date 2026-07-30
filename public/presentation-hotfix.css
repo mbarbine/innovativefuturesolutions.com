@@ -1,0 +1,498 @@
+.deck-shell {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.topbar-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 13px;
+}
+
+.cloudflare-menu {
+  position: relative;
+  z-index: 80;
+}
+
+.cloudflare-menu summary {
+  padding: 7px 9px;
+  color: var(--orange-hot, var(--green));
+  border: 1px solid var(--line);
+  background: rgba(2, 5, 8, 0.88);
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+  list-style: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cloudflare-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.cloudflare-menu summary::after {
+  content: " ▾";
+}
+
+.cloudflare-menu[open] summary::after {
+  content: " ▴";
+}
+
+.cloudflare-menu nav {
+  position: absolute;
+  top: calc(100% + 7px);
+  right: 0;
+  width: 245px;
+  max-height: min(70vh, 520px);
+  padding: 7px;
+  display: grid;
+  gap: 2px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  background: rgba(2, 5, 8, 0.98);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.5);
+}
+
+.cloudflare-menu a {
+  padding: 8px 9px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 8px;
+  text-decoration: none;
+}
+
+.cloudflare-menu a:hover,
+.cloudflare-menu a:focus-visible {
+  color: var(--orange-hot, var(--green));
+  background: rgba(255, 107, 0, 0.08);
+}
+
+.proof-apps article {
+  padding: 11px 15px;
+  border-bottom: 1px solid var(--line);
+}
+
+.proof-apps article > b,
+.proof-apps article > strong,
+.proof-apps article > p {
+  display: block;
+}
+
+.proof-apps article > b,
+.scenario-stack b,
+.impact-grid b,
+.callout-strip b,
+.dashboard-handoff b,
+.rule-expression span {
+  color: var(--green, var(--orange-hot));
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.11em;
+}
+
+.proof-apps article > strong {
+  margin-top: 5px;
+  font-size: clamp(14px, 1.15vw, 19px);
+  overflow-wrap: anywhere;
+}
+
+.proof-apps article > p {
+  margin: 5px 0 0;
+  color: var(--muted, var(--ink-dim));
+  font-size: 9px;
+}
+
+.inline-actions,
+.dashboard-handoff nav,
+.endpoint-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.inline-actions {
+  margin-top: 8px;
+}
+
+.inline-actions a,
+.inline-actions button,
+.dashboard-handoff a,
+.endpoint-buttons button {
+  padding: 6px 8px;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  background: rgba(2, 5, 8, 0.72);
+  font-family: var(--mono);
+  font-size: 7px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.scenario-stack {
+  margin-top: 18px;
+  display: grid;
+  gap: 7px;
+}
+
+.scenario-stack article {
+  padding: 10px 13px;
+  border-left: 2px solid var(--green, var(--orange));
+  background: rgba(2, 5, 8, 0.72);
+}
+
+.scenario-stack p {
+  margin: 5px 0 0;
+  color: var(--muted, var(--ink-dim));
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.compact-actions {
+  margin-top: 13px;
+  gap: 7px;
+}
+
+.compact-actions > * {
+  min-height: 34px;
+  padding: 8px 11px;
+  font-size: 7px;
+}
+
+.stacked-actions {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.callout-strip,
+.dashboard-handoff {
+  margin-top: 14px;
+  padding: 10px 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: rgba(2, 5, 8, 0.76);
+}
+
+.callout-strip span,
+.dashboard-handoff span {
+  color: var(--muted, var(--ink-dim));
+  font-size: 9px;
+}
+
+.impact-slide h2 {
+  font-size: clamp(46px, 5.2vw, 76px);
+}
+
+.impact-grid {
+  width: min(1120px, 100%);
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 1px;
+  background: var(--line);
+}
+
+.impact-grid article {
+  padding: 14px 16px;
+  text-align: left;
+  background: rgba(2, 5, 8, 0.86);
+}
+
+.impact-grid p,
+.impact-grid li {
+  color: var(--muted, var(--ink-dim));
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.impact-grid p {
+  margin: 9px 0 0;
+}
+
+.impact-grid ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.assumption-footnote {
+  margin: 8px 0 0;
+  color: var(--muted, var(--ink-dim));
+  font-family: var(--mono);
+  font-size: 7px;
+}
+
+.dashboard-handoff > div {
+  display: grid;
+  gap: 4px;
+}
+
+.dashboard-handoff a {
+  color: var(--green, var(--orange-hot));
+}
+
+.proof-list {
+  margin: 13px 0;
+  padding-left: 19px;
+}
+
+.proof-list li {
+  margin: 6px 0;
+  color: var(--muted, var(--ink-dim));
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.compact-grid {
+  margin-top: 14px;
+}
+
+.application-cards article {
+  display: flex;
+  flex-direction: column;
+}
+
+.application-cards .inline-actions {
+  margin-top: auto;
+}
+
+.architecture-chains article > strong {
+  font-size: clamp(17px, 1.55vw, 24px);
+}
+
+.enforcement-model,
+.api-handoff {
+  justify-content: flex-start;
+}
+
+.enforcement-model span,
+.api-handoff span {
+  color: var(--orange-hot, var(--green));
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.rule-expression {
+  margin-top: 14px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  background: rgba(2, 5, 8, 0.82);
+}
+
+.rule-expression span,
+.rule-expression code {
+  display: block;
+}
+
+.rule-expression code {
+  margin-top: 8px;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 8px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.request-head,
+.mini-runner {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+}
+
+.request-head span,
+.request-head b,
+.mini-runner span {
+  font-family: var(--mono);
+  font-size: 7px;
+}
+
+.request-head span {
+  padding: 5px 7px;
+  color: var(--bg);
+  background: var(--green, var(--orange-hot));
+}
+
+.mini-runner {
+  margin-top: 11px;
+}
+
+.mini-runner span {
+  flex: 1;
+  padding: 7px;
+  color: var(--muted, var(--ink-dim));
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.mini-runner .is-active {
+  color: var(--ink);
+  border-color: var(--green, var(--orange));
+}
+
+.mini-runner .is-complete {
+  color: var(--green-2, var(--ok));
+}
+
+.mini-runner .is-blocked {
+  color: var(--red, var(--danger));
+  border-color: rgba(255, 93, 98, 0.56);
+}
+
+.event-card pre,
+.api-console pre {
+  max-height: 180px;
+  margin: 11px 0;
+  padding: 11px;
+  overflow: auto;
+  color: var(--green-2, var(--safe));
+  border: 1px solid var(--line);
+  background: rgba(2, 5, 8, 0.88);
+  font-family: var(--mono);
+  font-size: 7px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.event-card dl {
+  margin: 0;
+}
+
+.burst-card button {
+  margin-top: 8px;
+}
+
+.api-proof-layout {
+  grid-template-columns: minmax(0, 1.2fr) minmax(310px, 0.8fr);
+}
+
+.endpoint-buttons {
+  margin-top: 12px;
+}
+
+.endpoint-buttons button {
+  flex: 1 1 170px;
+  text-align: left;
+}
+
+.poc-questions {
+  margin-top: 12px;
+}
+
+.poc-questions li {
+  margin: 4px 0;
+  font-size: 8px;
+}
+
+.poc-links {
+  padding: 0 15px 12px;
+}
+
+.deck-shell:fullscreen,
+.deck-shell:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  background: var(--bg);
+}
+
+html.is-presentation-mode,
+body.is-presentation-mode {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #02050a;
+}
+
+body.is-presentation-mode .deck-shell {
+  width: 100vw;
+  height: 100vh;
+}
+
+body.is-presentation-mode .topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 50;
+}
+
+body.is-presentation-mode .deck {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+}
+
+body.is-presentation-mode .slide.is-active {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 1366px), (max-height: 820px) {
+  .proof-apps article {
+    padding: 8px 12px;
+  }
+
+  .impact-grid article {
+    padding: 11px 13px;
+  }
+
+  .slide h2 {
+    font-size: clamp(38px, 4.8vw, 66px);
+  }
+
+  .product-grid article {
+    padding: 11px;
+  }
+
+  .cloudflare-menu summary {
+    padding: 6px 7px;
+    font-size: 6px;
+  }
+
+  .topbar-actions {
+    gap: 8px;
+  }
+
+  .application-cards article p {
+    margin-bottom: 9px;
+  }
+
+  .comparison-table > div {
+    min-height: 44px;
+  }
+
+  .comparison-table > p {
+    padding: 11px 14px;
+  }
+}
+
+@media (max-width: 920px) {
+  .impact-grid,
+  .api-proof-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .callout-strip,
+  .dashboard-handoff {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar-actions .live-pill {
+    display: none;
+  }
+
+  .cloudflare-menu nav {
+    position: fixed;
+    top: 64px;
+    right: 12px;
+  }
+}

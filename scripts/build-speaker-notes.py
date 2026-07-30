@@ -17,7 +17,7 @@ from docx.shared import Inches, Pt, RGBColor
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "docs" / "SPEAKER_NOTES.md"
-OUTPUT = ROOT / "public" / "downloads" / "cloudflare-application-security-speaker-notes.docx"
+OUTPUT = ROOT / "docs" / "cloudflare-application-security-speaker-notes.private.docx"
 
 BLUE = "2E74B5"
 DARK_BLUE = "1F4D78"
@@ -172,7 +172,9 @@ def add_hyperlink(paragraph, text: str, url: str):
     paragraph._p.append(hyperlink)
 
 
-INLINE_TOKEN = re.compile(r"(\*\*.+?\*\*|`.+?`|https?://[^\s]+)")
+INLINE_TOKEN = re.compile(
+    r"(\*\*.+?\*\*|`.+?`|\[[^\]]+\]\(https?://[^)]+\)|https?://[^\s]+)"
+)
 
 
 def add_inline(paragraph, text: str):
@@ -185,6 +187,9 @@ def add_inline(paragraph, text: str):
             set_run_font(paragraph.add_run(token[2:-2]), bold=True, color=INK)
         elif token.startswith("`"):
             set_run_font(paragraph.add_run(token[1:-1]), name="Consolas", size=9.5, color=DARK_BLUE)
+        elif token.startswith("["):
+            label, url = re.match(r"^\[([^\]]+)\]\((https?://[^)]+)\)$", token).groups()
+            add_hyperlink(paragraph, label, url)
         else:
             trailing = ""
             while token and token[-1] in ".,);":
@@ -347,7 +352,7 @@ def add_cover(doc: Document):
 
     title = doc.add_paragraph()
     title.paragraph_format.space_after = Pt(7)
-    set_run_font(title.add_run("Application Security\nat the Edge"), size=30, color=INK, bold=True)
+    set_run_font(title.add_run("Cloudflare Application\nSecurity"), size=30, color=INK, bold=True)
 
     subtitle = doc.add_paragraph()
     subtitle.paragraph_format.space_after = Pt(24)
@@ -357,9 +362,9 @@ def add_cover(doc: Document):
     set_table_geometry(table, [2340, 2340, 2340, 2340], indent=120)
     values = [
         ("30 MIN", "Customer call"),
-        ("5 · 5 · 17 · 3", "Stage clock"),
+        ("5 · 5 · 16 · 4", "Stage clock"),
         ("8 CHECKS", "Live preflight"),
-        ("200→403→429", "Proof chain"),
+        ("15 + 5", "Main + appendix"),
     ]
     for cell, (metric, label) in zip(table.rows[0].cells, values):
         cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
@@ -495,7 +500,7 @@ def build():
     bullet_abstract = create_abstract_numbering(doc, bullet=True)
     number_abstract = create_abstract_numbering(doc, bullet=False)
 
-    doc.core_properties.title = "Application Security at the Edge — Speaker Notes"
+    doc.core_properties.title = "Cloudflare Application Security — Final Speaker Notes"
     doc.core_properties.subject = "Cloudflare Solutions Engineer application security roleplay runbook"
     doc.core_properties.author = "Innovative Future Solutions"
     doc.core_properties.keywords = "Cloudflare, application security, speaker notes, interview"
@@ -504,7 +509,11 @@ def build():
     doc.add_page_break()
 
     intro_lines = blocks[0].splitlines()
-    start = next(index for index, line in enumerate(intro_lines) if line == "## Before the interview")
+    start = next(
+        index
+        for index, line in enumerate(intro_lines)
+        if line in {"## Preflight", "## Before the interview"}
+    )
     intro = "# Presenter preflight and run of show\n\n" + "\n".join(intro_lines[start:])
     parse_markdown(doc, intro, bullet_abstract, number_abstract)
 

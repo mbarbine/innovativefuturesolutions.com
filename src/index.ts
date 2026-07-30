@@ -5,7 +5,10 @@ export interface Env {
   SECURITY_DEPLOYED_AT?: string;
   WAF_RULE_STATUS?: string;
   WAF_RULE_ID?: string;
+  ZONE_PLAN?: string;
   BOT_POLICY_MODE?: string;
+  BOT_PRODUCT_ENTITLEMENT?: string;
+  BOT_SCORE_EVIDENCE?: string;
   API_DISCOVERY_STATUS?: string;
   RATE_LIMIT_STATUS?: string;
   RATE_LIMIT_RULE_ID?: string;
@@ -13,7 +16,62 @@ export interface Env {
 
 type JsonRecord = Record<string, unknown>;
 
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.4.2";
+
+const BOT_CONTROL_PRESENTATIONS = {
+  "bot-fight-mode": {
+    label: "Bot Fight Mode",
+    configured: true,
+    scoreTelemetryEligible: false,
+  },
+  "super-bot-fight-mode": {
+    label: "Super Bot Fight Mode",
+    configured: true,
+    scoreTelemetryEligible: false,
+  },
+  "bot-management": {
+    label: "Bot Management",
+    configured: true,
+    scoreTelemetryEligible: true,
+  },
+  "enterprise-bot-management": {
+    label: "Enterprise Bot Management",
+    configured: true,
+    scoreTelemetryEligible: true,
+  },
+} as const;
+
+type BotControlMode = keyof typeof BOT_CONTROL_PRESENTATIONS;
+
+function botControlPresentation(env: Env) {
+  const mode = env.BOT_POLICY_MODE ?? "unknown";
+  const presentation = BOT_CONTROL_PRESENTATIONS[mode as BotControlMode];
+  const scoreEvidenceVisible =
+    presentation?.scoreTelemetryEligible === true &&
+    env.BOT_SCORE_EVIDENCE === "visible";
+
+  if (!presentation) {
+    return {
+      mode: "unknown",
+      label: "Verify current dashboard state",
+      configured: false,
+      entitlement: env.BOT_PRODUCT_ENTITLEMENT ?? "Verify current dashboard state",
+      evidence: "Bot control configuration has not been verified.",
+      scoreEvidenceVisible: false,
+    };
+  }
+
+  return {
+    mode,
+    label: presentation.label,
+    configured: presentation.configured,
+    entitlement: env.BOT_PRODUCT_ENTITLEMENT ?? "Verify current dashboard state",
+    evidence: scoreEvidenceVisible
+      ? `${presentation.label} is configured and score-based evidence is visible in live telemetry.`
+      : `${presentation.label} is configured. Score-based policy is not demonstrated without visible live telemetry.`,
+    scoreEvidenceVisible,
+  };
+}
 
 const apiOperations = [
   { method: "GET", path: "/api/health", control: "public health" },
@@ -21,7 +79,7 @@ const apiOperations = [
   { method: "GET", path: "/api/demo/preflight", control: "live readiness evidence" },
   { method: "GET", path: "/api/demo/request-inspection", control: "redacted edge context" },
   { method: "GET", path: "/api/demo/profile", control: "public synthetic data" },
-  { method: "GET", path: "/api/demo/burst-control", control: "edge rate limit target" },
+  { method: "GET", path: "/cf-demo/rate-limit", control: "dedicated edge rate-limit proof target" },
   { method: "POST", path: "/api/demo/login", control: "Turnstile verified" },
   { method: "GET", path: "/api/docs", control: "public API documentation" },
 ] as const;
@@ -34,7 +92,9 @@ const jsonHeaders = {
 const baseSecurityHeaders = {
   "content-security-policy": [
     "default-src 'self'",
-    "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'sha256-nHTw4hvUfWu8zi0PApob3Z4kQVMpo1fdeRlvItmKS1U='",
+    "script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'sha256-YF4oFCyMY3+gGRYhWTOHyH0FlC+UnB6XbqN+ViJu1no='",
+    "script-src-elem 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com 'unsafe-inline'",
+    "script-src-attr 'none'",
     "style-src 'self'",
     "frame-src https://challenges.cloudflare.com",
     "connect-src 'self' https://challenges.cloudflare.com https://cloudflareinsights.com",
@@ -102,31 +162,34 @@ function publicConfig(env: Env): JsonRecord {
 }
 
 function securityControls(env: Env): JsonRecord {
+  const bots = botControlPresentation(env);
   return {
     source: "Cloudflare deployment configuration snapshot",
     capturedAt: env.SECURITY_DEPLOYED_AT ?? null,
+    zone: {
+      plan: env.ZONE_PLAN ?? "Verify current dashboard state",
+      evidence: env.ZONE_PLAN ? "deployment variable" : "not verified by this public Worker",
+    },
     waf: {
       status: env.WAF_RULE_STATUS ?? "unknown",
       ruleId: env.WAF_RULE_ID ? env.WAF_RULE_ID.slice(0, 8) + "…" : null,
-      demoTarget: "/attack-lab?attack=xss&payload=%3Cscript%3Ealert(1)%3C%2Fscript%3E",
+      configuredTarget: "/attack-lab?attack=xss&payload=%3Cscript%3Ealert(1)%3C%2Fscript%3E",
+      preferredOperatorTarget: "/cf-demo/attack",
+      evidence: "Configuration status is not request-level enforcement proof.",
     },
-    bots: {
-      mode: env.BOT_POLICY_MODE ?? "unknown",
-      planNote:
-        env.BOT_POLICY_MODE === "bot-fight-mode"
-          ? "Bot Fight Mode is the available Cloudflare Free-plan bot control; bot-score rules require a higher plan."
-          : "No configured bot-control snapshot is available.",
-    },
+    bots,
     apiGateway: {
       status: env.API_DISCOVERY_STATUS ?? "unknown",
-      note: "API Shield Endpoint Management is available on all plans. Worker-backed endpoint metrics may be unavailable.",
+      note: "Endpoint Management is not API Discovery. A stored schema is not proof that schema blocking is active.",
       operations: apiOperations,
     },
     rateLimit: {
       status: env.RATE_LIMIT_STATUS ?? "unknown",
       ruleId: env.RATE_LIMIT_RULE_ID ? env.RATE_LIMIT_RULE_ID.slice(0, 8) + "…" : null,
-      demoTarget: "/api/demo/burst-control",
+      configuredTarget: "/api/demo/burst-control",
+      preferredOperatorTarget: "/cf-demo/rate-limit",
       policy: "5 requests per 10 seconds; block for 10 seconds",
+      evidence: "Distributed counters can propagate with delay; a fresh 429 is enforcement proof.",
     },
   };
 }
@@ -162,6 +225,7 @@ function preflight(env: Env, request: Request): JsonRecord {
   const cf = request.cf as IncomingRequestCfProperties | undefined;
   const hostReady = ["innovativefuturesolutions.com", "www.innovativefuturesolutions.com"].includes(url.hostname);
   const tlsReady = url.protocol === "https:" && Boolean(cf?.tlsVersion && cf.tlsVersion !== "unknown");
+  const bots = botControlPresentation(env);
   const checks = [
     {
       id: "worker",
@@ -190,8 +254,8 @@ function preflight(env: Env, request: Request): JsonRecord {
     {
       id: "bots",
       label: "Bot control",
-      status: env.BOT_POLICY_MODE === "bot-fight-mode" ? "pass" : "warn",
-      evidence: env.BOT_POLICY_MODE ?? "unknown",
+      status: bots.configured ? "pass" : "warn",
+      evidence: bots.label,
     },
     {
       id: "turnstile",
@@ -219,7 +283,8 @@ function preflight(env: Env, request: Request): JsonRecord {
     evidenceMode: "live request plus deployment control snapshot",
     checks,
     limitations: [
-      "Bot Fight Mode is the configured Free-plan control; Enterprise bot scores are not claimed.",
+      bots.evidence,
+      `Zone plan: ${env.ZONE_PLAN ?? "Verify current dashboard state"}. Product entitlement is verified separately.`,
       "Worker-backed API Shield endpoint metrics may not populate even when endpoints are catalogued.",
       "Security Event details remain in the authenticated Cloudflare dashboard.",
       "Rate counters are scoped to Cloudflare data-center locations and can take a few seconds to propagate.",
@@ -290,7 +355,7 @@ function health(env: Env, request: Request): JsonRecord {
 const openapi = `openapi: 3.1.0
 info:
   title: Innovative Future Solutions Application Security Demo
-  version: 1.3.0
+  version: 1.4.2
   description: Public-safe endpoints used by the Cloudflare application-security walkthrough.
 servers:
   - url: https://innovativefuturesolutions.com
@@ -330,7 +395,27 @@ paths:
       responses:
         '200':
           description: Demo profile
-  /api/demo/burst-control:
+  /cf-demo/normal:
+    get:
+      operationId: getDemoBaselineTarget
+      summary: Return a public-safe baseline response for the private operator helper
+      responses:
+        '200': { description: Request reached the Worker }
+  /cf-demo/attack:
+    get:
+      operationId: getWafProbeFallback
+      summary: Return a fallback response when the edge WAF does not block the dedicated probe
+      responses:
+        '200': { description: Request reached the Worker and is not WAF block evidence }
+        '403': { description: Request was blocked at the Cloudflare edge }
+  /cf-demo/api:
+    get:
+      operationId: getDemoApiTarget
+      summary: Validate synthetic query input in the optional Worker fallback
+      responses:
+        '200': { description: Worker fallback accepted valid input }
+        '400': { description: Worker fallback rejected invalid input }
+  /cf-demo/rate-limit:
     get:
       operationId: getBurstControlTarget
       summary: Return a lightweight response until the edge rate limit blocks the request
@@ -379,7 +464,10 @@ Public surfaces:
 - /api/demo/preflight — live readiness evidence
 - /api/demo/request-inspection — redacted edge execution context
 - /api/demo/profile — safe API Discovery traffic target
-- /api/demo/burst-control — isolated edge rate-limit proof target
+- /cf-demo/normal — private helper baseline target
+- /cf-demo/attack — dedicated WAF probe target with an explicit Worker fallback
+- /cf-demo/api — synthetic API input target with a clearly labeled Worker fallback
+- /cf-demo/rate-limit — preferred isolated edge rate-limit proof target
 - /api/mcp — read-only MCP discovery and JSON-RPC endpoint
 - /openapi.yaml — API description
 - /.well-known/mcp.json — MCP discovery manifest
@@ -392,6 +480,13 @@ The /api/demo/login endpoint validates Cloudflare Turnstile tokens server-side a
 async function routeRequest(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
+
+  if (url.pathname === "/downloads/cloudflare-application-security-speaker-notes.docx") {
+    return new Response("Not found", {
+      status: 404,
+      headers: { "cache-control": "no-store" },
+    });
+  }
 
   if ((url.pathname === "/api/health" || url.pathname === "/api/v1/health") && method === "GET") {
     return apiSuccess(health(env, request));
@@ -421,7 +516,62 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
     });
   }
 
-  if (url.pathname === "/api/demo/burst-control" && method === "GET") {
+  if (url.pathname === "/cf-demo/normal" && method === "GET") {
+    const cf = request.cf as IncomingRequestCfProperties | undefined;
+    return apiSuccess({
+      kind: "baseline",
+      edgeReached: true,
+      meaning: "This public-safe request reached Worker code.",
+      observedAt: new Date().toISOString(),
+      edge: { colo: cf?.colo ?? "unknown" },
+      requestId: requestId(request),
+    });
+  }
+
+  if (url.pathname === "/cf-demo/attack" && method === "GET") {
+    const cf = request.cf as IncomingRequestCfProperties | undefined;
+    return apiSuccess({
+      kind: "waf-probe-fallback",
+      edgeReached: true,
+      meaning: "A 200 response means the request reached Worker code. Only an edge 403 plus a fresh Security Event is WAF enforcement evidence.",
+      observedAt: new Date().toISOString(),
+      edge: { colo: cf?.colo ?? "unknown" },
+      requestId: requestId(request),
+    });
+  }
+
+  if (url.pathname === "/cf-demo/api" && method === "GET") {
+    const id = url.searchParams.get("id");
+    const verbose = url.searchParams.get("verbose");
+    const idIsValid = Boolean(id && /^\d+$/.test(id));
+    const verboseIsValid = verbose === null || /^(true|false)$/.test(verbose);
+
+    if (!idIsValid || !verboseIsValid) {
+      return apiError(
+        "WORKER_FALLBACK_VALIDATION_REJECTED",
+        "The optional Worker fallback rejected invalid demo input. This is not proof that native API Shield schema validation acted.",
+        400,
+        {
+          id: idIsValid ? "valid" : "must be an integer",
+          verbose: verboseIsValid ? "valid" : "must be true or false",
+        },
+      );
+    }
+
+    return apiSuccess({
+      kind: "api-valid",
+      id: Number(id),
+      verbose: verbose === "true",
+      validationLayer: "Worker fallback",
+      evidenceBoundary: "A native API Shield decision must be verified separately in Security Events.",
+    });
+  }
+
+  if (
+    (url.pathname === "/cf-demo/rate-limit" ||
+      url.pathname === "/api/demo/burst-control") &&
+    method === "GET"
+  ) {
     const cf = request.cf as IncomingRequestCfProperties | undefined;
     return apiSuccess({
       allowed: true,
@@ -545,7 +695,7 @@ async function routeRequest(request: Request, env: Env): Promise<Response> {
 
   if ((url.pathname === "/rss.xml" || url.pathname === "/atom.xml") && method === "GET") {
     return new Response(
-      '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Innovative Future Solutions Application Security</title><link>https://innovativefuturesolutions.com/</link><description>Cloudflare application-security demo releases and evidence updates.</description><lastBuildDate>Wed, 22 Jul 2026 00:00:00 GMT</lastBuildDate><item><title>Guided Cloudflare canary demo</title><link>https://innovativefuturesolutions.com/#/10</link><guid isPermaLink="true">https://innovativefuturesolutions.com/#/10</guid><pubDate>Wed, 22 Jul 2026 00:00:00 GMT</pubDate><description>Added guided JSON graph handoffs for live security-control evidence.</description></item></channel></rss>\n',
+      '<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0"><channel><title>Innovative Future Solutions Application Security</title><link>https://innovativefuturesolutions.com/</link><description>Cloudflare application-security demo releases and evidence updates.</description><lastBuildDate>Wed, 22 Jul 2026 00:00:00 GMT</lastBuildDate><item><title>Guided Cloudflare evidence demo</title><link>https://innovativefuturesolutions.com/#/10</link><guid isPermaLink="true">https://innovativefuturesolutions.com/#/10</guid><pubDate>Wed, 22 Jul 2026 00:00:00 GMT</pubDate><description>Added guided JSON graph handoffs for live security-control evidence.</description></item></channel></rss>\n',
       { headers: { "content-type": "application/rss+xml; charset=utf-8", "cache-control": "public, max-age=3600" } },
     );
   }
